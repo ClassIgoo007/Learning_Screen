@@ -1,0 +1,15 @@
+# Secrets — real API keys live here, never commit them.
+env.json
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
