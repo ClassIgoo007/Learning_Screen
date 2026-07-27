@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/quiz_session.dart';
 import '../models/worksheet.dart';
 import '../services/openai_service.dart';
 import '../services/tts_service.dart';
@@ -10,25 +11,22 @@ import 'results_screen.dart';
 class QuizScreen extends StatefulWidget {
   const QuizScreen({
     super.key,
-    required this.worksheet,
+    required this.session,
     required this.openAI,
     required this.tts,
+    required this.store,
   });
 
-  final Worksheet worksheet;
+  final QuizSession session;
   final OpenAIService openAI;
   final TtsService tts;
+  final SessionStore store;
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  static const int _maxLives = 5;
-
-  int _index = 0;
-  int _lives = _maxLives;
-  int _correct = 0;
   String? _selected;
   bool _submitted = false;
   final Set<String> _eliminated = {};
@@ -40,8 +38,10 @@ class _QuizScreenState extends State<QuizScreen> {
     _startedAt = DateTime.now();
   }
 
-  PhoneticQuestion get _question => widget.worksheet.questions[_index];
-  int get _total => widget.worksheet.questions.length;
+  QuizSession get _session => widget.session;
+  PhoneticQuestion get _question =>
+      _session.worksheet.questions[_session.index];
+  int get _total => _session.total;
 
   void _submit(String word) {
     if (_submitted) return;
@@ -50,9 +50,10 @@ class _QuizScreenState extends State<QuizScreen> {
       _selected = word;
       _submitted = true;
       if (correct) {
-        _correct++;
+        _session.correct++;
       } else {
-        _lives = (_lives - 1).clamp(0, _maxLives);
+        _session.lives =
+            (_session.lives - 1).clamp(0, QuizSession.maxLives);
       }
     });
   }
@@ -78,14 +79,14 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _next() {
-    final outOfLives = _lives <= 0;
-    final lastQuestion = _index >= _total - 1;
+    final outOfLives = _session.lives <= 0;
+    final lastQuestion = _session.index >= _total - 1;
     if (lastQuestion || outOfLives) {
       _finish();
       return;
     }
     setState(() {
-      _index++;
+      _session.index++;
       _selected = null;
       _submitted = false;
       _eliminated.clear();
@@ -94,14 +95,21 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _finish() {
     final elapsed = DateTime.now().difference(_startedAt);
+    final worksheet = _session.worksheet;
+    final correct = _session.correct;
+    final total = _total;
+    // Session is done — clear it so "Resume" starts fresh next time.
+    widget.store.clear();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ResultsScreen(
-          correct: _correct,
-          total: _total,
+          correct: correct,
+          total: total,
           elapsed: elapsed,
+          worksheet: worksheet,
           openAI: widget.openAI,
           tts: widget.tts,
+          store: widget.store,
         ),
       ),
     );
@@ -118,8 +126,8 @@ class _QuizScreenState extends State<QuizScreen> {
           child: Column(
             children: [
               _TopBar(
-                progress: (_index + (_submitted ? 1 : 0)) / _total,
-                lives: _lives,
+                progress: (_session.index + (_submitted ? 1 : 0)) / _total,
+                lives: _session.lives,
                 onBack: () => Navigator.of(context).maybePop(),
               ),
               Expanded(
@@ -231,7 +239,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ],
           AppButton(
             label: _submitted
-                ? (_index >= _total - 1 || _lives <= 0
+                ? (_session.index >= _total - 1 || _session.lives <= 0
                     ? 'See Results'
                     : 'Continue Next')
                 : 'Pick an answer',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/quiz_session.dart';
 import '../models/worksheet.dart';
 import '../services/openai_service.dart';
 import '../services/tts_service.dart';
@@ -13,15 +14,19 @@ class ResultsScreen extends StatefulWidget {
     required this.correct,
     required this.total,
     required this.elapsed,
+    required this.worksheet,
     required this.openAI,
     required this.tts,
+    required this.store,
   });
 
   final int correct;
   final int total;
   final Duration elapsed;
+  final Worksheet worksheet;
   final OpenAIService openAI;
   final TtsService tts;
+  final SessionStore store;
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -47,18 +52,20 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   void _startQuiz(Worksheet ws) {
+    final session = widget.store.startNew(ws);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => QuizScreen(
-          worksheet: ws,
+          session: session,
           openAI: widget.openAI,
           tts: widget.tts,
+          store: widget.store,
         ),
       ),
     );
   }
 
-  Future<void> _playAgain() async => _startQuiz(kDefaultWorksheet);
+  Future<void> _playAgain() async => _startQuiz(widget.worksheet);
 
   Future<void> _generateNew() async {
     final theme = await _askForTheme();

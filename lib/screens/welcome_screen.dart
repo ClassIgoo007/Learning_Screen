@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/quiz_session.dart';
 import '../models/worksheet.dart';
 import '../services/openai_service.dart';
 import '../services/tts_service.dart';
@@ -7,30 +8,50 @@ import '../theme/app_theme.dart';
 import '../widgets/common.dart';
 import 'quiz_screen.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({
     super.key,
     required this.openAI,
     required this.tts,
+    required this.store,
   });
 
   final OpenAIService openAI;
   final TtsService tts;
+  final SessionStore store;
 
-  void _start(BuildContext context) {
-    Navigator.of(context).push(
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  Future<void> _open(QuizSession session) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => QuizScreen(
-          worksheet: kDefaultWorksheet,
-          openAI: openAI,
-          tts: tts,
+          session: session,
+          openAI: widget.openAI,
+          tts: widget.tts,
+          store: widget.store,
         ),
       ),
     );
+    // Refresh so the "Resume" button reflects the latest session state.
+    if (mounted) setState(() {});
+  }
+
+  void _freshStart() => _open(widget.store.startNew(kDefaultWorksheet));
+
+  void _resume() {
+    final session = widget.store.canResume
+        ? widget.store.current!
+        : widget.store.startNew(kDefaultWorksheet);
+    _open(session);
   }
 
   @override
   Widget build(BuildContext context) {
+    final canResume = widget.store.canResume;
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.skyGradient),
       child: Scaffold(
@@ -57,13 +78,14 @@ class WelcomeScreen extends StatelessWidget {
                   label: "Let's Get a Fresh Start",
                   icon: Icons.rocket_launch_rounded,
                   color: AppColors.blue,
-                  onTap: () => _start(context),
+                  onTap: _freshStart,
                 ),
                 const SizedBox(height: 12),
                 AppButton(
                   label: 'Resume Journey',
                   outlined: true,
-                  onTap: () => _start(context),
+                  enabled: canResume,
+                  onTap: _resume,
                 ),
               ],
             ),

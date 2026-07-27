@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'models/quiz_session.dart';
 import 'screens/welcome_screen.dart';
 import 'services/openai_service.dart';
 import 'services/tts_service.dart';
@@ -13,8 +14,24 @@ const String _openAiKey = String.fromEnvironment('OPENAI_API_KEY');
 
 void main() => runApp(const PhonicsApp());
 
-class PhonicsApp extends StatelessWidget {
+class PhonicsApp extends StatefulWidget {
   const PhonicsApp({super.key});
+
+  @override
+  State<PhonicsApp> createState() => _PhonicsAppState();
+}
+
+class _PhonicsAppState extends State<PhonicsApp> {
+  late final OpenAIService _openAI = OpenAIService(apiKey: _openAiKey);
+  late final TtsService _tts = TtsService();
+  final SessionStore _store = SessionStore();
+
+  @override
+  void dispose() {
+    _openAI.dispose();
+    _tts.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +39,7 @@ class PhonicsApp extends StatelessWidget {
       title: 'Phonics Worksheets',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: WelcomeScreen(
-        openAI: OpenAIService(apiKey: _openAiKey),
-        tts: TtsService(),
-      ),
+      home: WelcomeScreen(openAI: _openAI, tts: _tts, store: _store),
     );
   }
 }
