@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'models/quiz_session.dart';
-import 'screens/welcome_screen.dart';
+import 'screens/home_screen.dart';
 import 'services/openai_service.dart';
 import 'services/tts_service.dart';
 import 'theme/app_theme.dart';
@@ -39,7 +39,7 @@ class _PhonicsAppState extends State<PhonicsApp> {
       title: 'Phonics Worksheets',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: WelcomeScreen(openAI: _openAI, tts: _tts, store: _store),
+      home: HomeScreen(openAI: _openAI, tts: _tts, store: _store),
     );
   }
 }

@@ -61,7 +61,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
             child: Column(
               children: [
-                const _SafeBadge(),
+                const Row(
+                  children: [
+                    CircleBackButton(),
+                    SizedBox(width: 14),
+                    _SafeBadge(),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 const _Headline(),
                 const SizedBox(height: 8),

@@ -83,6 +83,37 @@ class AppButton extends StatelessWidget {
   }
 }
 
+/// A white circular back button used in screen headers.
+class CircleBackButton extends StatelessWidget {
+  const CircleBackButton({super.key, this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 0,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap ?? () => Navigator.of(context).maybePop(),
+        child: Container(
+          width: 42,
+          height: 42,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: kCardShadow,
+          ),
+          child: const Icon(Icons.arrow_back_rounded,
+              color: AppColors.ink, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
 /// A round icon button (e.g. speaker, hint).
 class CircleIconButton extends StatelessWidget {
   const CircleIconButton({
