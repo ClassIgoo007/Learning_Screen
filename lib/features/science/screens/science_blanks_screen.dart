@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/openai_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../logic/controllers.dart';
 import '../models/science_content.dart';
 import '../widgets/science_widgets.dart';
 
-/// Fill-in-the-blank activity for a science reading topic.
+/// Fill-in-the-blank: type answers, then press Check to grade.
 class ScienceBlanksScreen extends StatefulWidget {
-  const ScienceBlanksScreen({super.key, required this.topic});
+  const ScienceBlanksScreen({
+    super.key,
+    required this.topic,
+    required this.openAI,
+  });
 
   final ScienceTopic topic;
+  final OpenAIService openAI;
 
   @override
   State<ScienceBlanksScreen> createState() => _ScienceBlanksScreenState();
@@ -19,10 +25,11 @@ class ScienceBlanksScreen extends StatefulWidget {
 class _ScienceBlanksScreenState extends State<ScienceBlanksScreen> {
   late final BlanksController _controller =
       BlanksController(widget.topic.blankItems);
-  late final List<TextEditingController> _fields = List.generate(
+  late List<TextEditingController> _fields = List.generate(
     widget.topic.blankItems.length,
     (_) => TextEditingController(),
   );
+  bool _generating = false;
 
   @override
   void dispose() {
@@ -31,6 +38,13 @@ class _ScienceBlanksScreenState extends State<ScienceBlanksScreen> {
     }
     _controller.dispose();
     super.dispose();
+  }
+
+  void _rebuildFields(int count) {
+    for (final f in _fields) {
+      f.dispose();
+    }
+    _fields = List.generate(count, (_) => TextEditingController());
   }
 
   void _resetAll() {
@@ -47,14 +61,66 @@ class _ScienceBlanksScreenState extends State<ScienceBlanksScreen> {
 
   void _check() {
     FocusScope.of(context).unfocus();
+    if (_controller.filledCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Type at least one answer, then press Check.')),
+      );
+      return;
+    }
     _controller.check();
     final missing = _controller.total - _controller.filledCount;
-    if (missing > 0) {
+    final wrong = _controller.wrongCount;
+    if (!mounted) return;
+    if (wrong > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('$missing blank(s) still empty — the filled ones '
-                'were checked.')),
+          backgroundColor: AppColors.red,
+          content: Text(
+            wrong == 1
+                ? '1 answer is wrong. Look for the red messages below.'
+                : '$wrong answers are wrong. Look for the red messages below.',
+          ),
+        ),
       );
+    } else if (missing == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.green,
+          content: Text('Nice work — every answer is correct!'),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                '$missing blank(s) still empty — the filled ones were checked.')),
+      );
+    }
+  }
+
+  Future<void> _generateNew() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final items =
+          await widget.openAI.generateScienceBlanks(topic: widget.topic);
+      if (!mounted) return;
+      _controller.replaceItems(items);
+      _rebuildFields(items.length);
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Loaded ${items.length} new AI sentences. Type answers, then Check.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate sentences: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
     }
   }
 
@@ -97,8 +163,8 @@ class _ScienceBlanksScreenState extends State<ScienceBlanksScreen> {
                       ],
                       const SizedBox(height: 14),
                       const Text(
-                        'Complete each sentence with a word from the reading. '
-                        'Spelling counts, but capital letters do not.',
+                        'Type a word into each blank, then press Check. '
+                        'If an answer is wrong, you will see a clear message.',
                         style: TextStyle(fontSize: 14.5, color: AppColors.ink),
                       ),
                       const SizedBox(height: 12),
@@ -123,7 +189,7 @@ class _ScienceBlanksScreenState extends State<ScienceBlanksScreen> {
                         const SizedBox(height: 6),
                         ScoreCard(
                           score: _controller.score,
-                          total: _controller.total,
+                          total: _controller.filledCount,
                           label: _controller.allCorrect
                               ? 'Perfect! Every sentence is right.'
                               : 'Your score',
@@ -195,28 +261,42 @@ class _ScienceBlanksScreenState extends State<ScienceBlanksScreen> {
       ),
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (context, _) => Row(
+        builder: (context, _) => Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              flex: 3,
-              child: AppButton(
-                label:
-                    'Check (${_controller.filledCount}/${_controller.total})',
-                icon: Icons.check_rounded,
-                color: widget.topic.accent,
-                enabled: _controller.filledCount > 0,
-                onTap: _check,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: AppButton(
+                    label:
+                        'Check (${_controller.filledCount}/${_controller.total})',
+                    icon: Icons.check_rounded,
+                    color: widget.topic.accent,
+                    enabled: _controller.filledCount > 0 && !_generating,
+                    onTap: _check,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: AppButton(
+                    label: 'Reset',
+                    icon: Icons.refresh_rounded,
+                    outlined: true,
+                    enabled: !_generating,
+                    onTap: _resetAll,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: AppButton(
-                label: 'Reset',
-                icon: Icons.refresh_rounded,
-                outlined: true,
-                onTap: _resetAll,
-              ),
+            const SizedBox(height: 10),
+            AppButton(
+              label: _generating ? 'Generating…' : 'New AI Sentences',
+              icon: Icons.auto_awesome_rounded,
+              color: AppColors.blue,
+              enabled: !_generating,
+              onTap: _generateNew,
             ),
           ],
         ),
@@ -339,6 +419,53 @@ class _BlankCard extends StatelessWidget {
               ),
             ),
           ),
+          if (showWrong) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.redSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.cancel_rounded, size: 18, color: AppColors.red),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'That answer is wrong. Try again, use a hint, or tap '
+                      'Show answer.',
+                      style: TextStyle(fontSize: 13.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (showRight) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.greenSoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle_rounded,
+                      size: 18, color: AppColors.greenDark),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Correct!',
+                        style: TextStyle(fontSize: 13.5)),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 6),
           Row(
             children: [

@@ -1,9 +1,11 @@
 import 'dart:math' show Point, min;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../../theme/app_theme.dart';
 import '../logic/activity_controller.dart';
+import '../models/activity.dart';
 
 /// Word-bank card. Words are struck through once used in a sentence;
 /// a magnifier check appears when also found in the puzzle.
@@ -218,8 +220,8 @@ class _Blank extends StatelessWidget {
   }
 }
 
-/// The letter grid inside a rounded white card. Two taps select a straight
-/// run of letters; matching an unfound word "circles" it permanently.
+/// The letter grid inside a rounded white card.
+/// Drag across letters in a straight line to cross out a word.
 class WordSearchGrid extends StatelessWidget {
   const WordSearchGrid({super.key, required this.controller});
 
@@ -241,57 +243,181 @@ class WordSearchGrid extends StatelessWidget {
           final available =
               constraints.maxWidth.isFinite ? constraints.maxWidth : 360.0;
           final cell = min(available / activity.cols, 36.0);
+          final gridW = cell * activity.cols;
+          final gridH = cell * activity.rows;
+          final selecting = controller.selectionCells.toSet();
           final found = controller.foundCells;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var r = 0; r < activity.rows; r++)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var c = 0; c < activity.cols; c++)
-                      _cell(Point(r, c), cell, found),
-                  ],
+
+          Point<int>? cellAt(Offset local) {
+            final c = (local.dx / cell).floor();
+            final r = (local.dy / cell).floor();
+            if (r < 0 || c < 0 || r >= activity.rows || c >= activity.cols) {
+              return null;
+            }
+            return Point(r, c);
+          }
+
+          return SizedBox(
+            width: gridW,
+            height: gridH,
+            // Eager pan wins over the parent scroll view so kids can drag
+            // across vertical words without the page stealing the gesture.
+            child: RawGestureDetector(
+              behavior: HitTestBehavior.opaque,
+              gestures: {
+                _EagerPanGestureRecognizer:
+                    GestureRecognizerFactoryWithHandlers<
+                        _EagerPanGestureRecognizer>(
+                  _EagerPanGestureRecognizer.new,
+                  (instance) {
+                    instance
+                      ..onStart = (d) {
+                        final p = cellAt(d.localPosition);
+                        if (p != null) controller.beginGridSelect(p);
+                      }
+                      ..onUpdate = (d) {
+                        final p = cellAt(d.localPosition);
+                        if (p != null) controller.updateGridSelect(p);
+                      }
+                      ..onEnd = (_) {
+                        controller.endGridSelect();
+                      }
+                      ..onCancel = controller.cancelGridSelect;
+                  },
                 ),
-            ],
+              },
+              child: Stack(
+                children: [
+                  CustomPaint(
+                    size: Size(gridW, gridH),
+                    painter: _WordHighlightPainter(
+                      cellSize: cell,
+                      found: controller.foundPlacements,
+                      selecting: controller.selectionCells,
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var r = 0; r < activity.rows; r++)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (var c = 0; c < activity.cols; c++)
+                              _letter(
+                                Point(r, c),
+                                cell,
+                                found.contains(Point(r, c)),
+                                selecting.contains(Point(r, c)),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           );
         }),
       ),
     );
   }
 
-  Widget _cell(Point<int> pos, double size, Set<Point<int>> found) {
-    final isStart = controller.selectionStart == pos;
-    final isFound = found.contains(pos);
+  Widget _letter(
+    Point<int> pos,
+    double size,
+    bool isFound,
+    bool isSelecting,
+  ) {
+    Color color = AppColors.ink;
+    if (isFound) color = AppColors.greenDark;
+    if (isSelecting) color = AppColors.blueDark;
 
-    Color fill = Colors.white;
-    if (isFound) fill = AppColors.greenSoft;
-    if (isStart) fill = AppColors.blue;
-
-    return GestureDetector(
-      onTap: () => controller.tapGridCell(pos),
-      child: Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: fill,
-          border: Border.all(color: const Color(0xFFD7E2EC), width: 0.6),
-          borderRadius: isFound ? BorderRadius.circular(size / 2) : null,
-        ),
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Center(
         child: Text(
           controller.activity.letterAt(pos),
           style: TextStyle(
             fontSize: size * 0.5,
             fontWeight: FontWeight.w700,
-            color: isStart
-                ? Colors.white
-                : isFound
-                    ? AppColors.greenDark
-                    : AppColors.ink,
+            color: color,
           ),
         ),
       ),
     );
+  }
+}
+
+/// Draws continuous rounded “highlighter” strokes for found / selecting words.
+class _WordHighlightPainter extends CustomPainter {
+  _WordHighlightPainter({
+    required this.cellSize,
+    required this.found,
+    required this.selecting,
+  });
+
+  final double cellSize;
+  final List<WordPlacement> found;
+  final List<Point<int>> selecting;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final placement in found) {
+      _stroke(canvas, placement.cells, AppColors.greenSoft);
+    }
+    if (selecting.isNotEmpty) {
+      _stroke(canvas, selecting, AppColors.blueSoft);
+    }
+  }
+
+  void _stroke(Canvas canvas, List<Point<int>> cells, Color color) {
+    if (cells.isEmpty) return;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final thickness = cellSize * 0.78;
+    if (cells.length == 1) {
+      final c = cells.first;
+      final center = Offset((c.y + 0.5) * cellSize, (c.x + 0.5) * cellSize);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: center, width: thickness, height: thickness),
+          Radius.circular(thickness / 2),
+        ),
+        paint,
+      );
+      return;
+    }
+
+    final first = cells.first;
+    final last = cells.last;
+    final start = Offset(
+        (first.y + 0.5) * cellSize, (first.x + 0.5) * cellSize);
+    final end =
+        Offset((last.y + 0.5) * cellSize, (last.x + 0.5) * cellSize);
+
+    paint.strokeWidth = thickness;
+    paint.style = PaintingStyle.stroke;
+    canvas.drawLine(start, end, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _WordHighlightPainter old) =>
+      old.cellSize != cellSize ||
+      old.found != found ||
+      old.selecting != selecting;
+}
+
+/// Accepts the pan immediately so the surrounding scroll view cannot steal
+/// vertical word-search drags.
+class _EagerPanGestureRecognizer extends PanGestureRecognizer {
+  @override
+  void rejectGesture(int pointer) {
+    acceptGesture(pointer);
   }
 }

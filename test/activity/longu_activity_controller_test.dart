@@ -31,13 +31,12 @@ void main() {
   });
 
   group('word search', () {
-    test('selecting a word run marks it found (either tap order)', () {
+    test('dragging across a word run marks it found (either direction)', () {
       final c = ActivityController(kLongUActivity);
       final placement = kLongUActivity
           .findPlacements()
           .firstWhere((p) => p.word == 'MENU');
-      c.tapGridCell(placement.cells.last); // backwards on purpose
-      c.tapGridCell(placement.cells.first);
+      c.selectWordRun(placement.cells.last, placement.cells.first);
       expect(c.isWordFound('MENU'), isTrue);
     });
 
@@ -48,8 +47,7 @@ void main() {
         c.tapBankWord(s.answer);
       }
       for (final p in kLongUActivity.findPlacements()) {
-        c.tapGridCell(p.cells.first);
-        c.tapGridCell(p.cells.last);
+        c.selectWordRun(p.cells.first, p.cells.last);
       }
       expect(c.isComplete, isTrue);
     });

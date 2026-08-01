@@ -52,11 +52,19 @@ class WordBank extends StatelessWidget {
 
   Widget _wordChip(CrosswordEntry entry) {
     final solved = controller.isEntrySolved(entry);
+    final wrong = controller.isEntryWrong(entry);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: solved ? AppColors.greenSoft : AppColors.blueSoft,
+        color: solved
+            ? AppColors.greenSoft
+            : wrong
+                ? AppColors.redSoft
+                : AppColors.blueSoft,
         borderRadius: BorderRadius.circular(30),
+        border: wrong
+            ? Border.all(color: AppColors.red.withValues(alpha: 0.5))
+            : null,
       ),
       child: Text(
         entry.answer.toLowerCase(),
@@ -64,7 +72,11 @@ class WordBank extends StatelessWidget {
           fontSize: 15,
           fontWeight: FontWeight.w700,
           decoration: solved ? TextDecoration.lineThrough : null,
-          color: solved ? AppColors.greenDark : AppColors.ink,
+          color: solved
+              ? AppColors.greenDark
+              : wrong
+                  ? AppColors.red
+                  : AppColors.ink,
         ),
       ),
     );
@@ -120,6 +132,7 @@ class CluesPanel extends StatelessWidget {
   Widget _clue(CrosswordEntry e) {
     final selected = controller.selected == e;
     final solved = controller.isEntrySolved(e);
+    final wrong = controller.isEntryWrong(e);
     return InkWell(
       onTap: () => controller.selectEntry(e),
       borderRadius: BorderRadius.circular(12),
@@ -128,20 +141,32 @@ class CluesPanel extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 4),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.blueSoft : null,
+          color: selected
+              ? AppColors.blueSoft
+              : wrong
+                  ? AppColors.redSoft
+                  : null,
           borderRadius: BorderRadius.circular(12),
+          border: wrong
+              ? Border.all(color: AppColors.red.withValues(alpha: 0.45))
+              : null,
         ),
         child: Text.rich(
           TextSpan(children: [
             TextSpan(
                 text: '${e.number}. ',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800, color: AppColors.blueDark)),
+                style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: wrong ? AppColors.red : AppColors.blueDark)),
             TextSpan(
               text: e.clue,
               style: TextStyle(
                 decoration: solved ? TextDecoration.lineThrough : null,
-                color: solved ? AppColors.inkSoft : AppColors.ink,
+                color: solved
+                    ? AppColors.inkSoft
+                    : wrong
+                        ? AppColors.red
+                        : AppColors.ink,
               ),
             ),
             if (solved)
@@ -150,6 +175,14 @@ class CluesPanel extends StatelessWidget {
                   padding: EdgeInsets.only(left: 6),
                   child: Icon(Icons.check_circle_rounded,
                       size: 16, color: AppColors.green),
+                ),
+              ),
+            if (wrong)
+              const WidgetSpan(
+                child: Padding(
+                  padding: EdgeInsets.only(left: 6),
+                  child: Icon(Icons.cancel_rounded,
+                      size: 16, color: AppColors.red),
                 ),
               ),
           ]),

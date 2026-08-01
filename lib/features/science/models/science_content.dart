@@ -15,6 +15,24 @@ class QuizQuestion {
   });
 
   String get answer => options[answerIndex];
+
+  factory QuizQuestion.fromJson(Map<String, dynamic> json) {
+    final options = (json['options'] as List).map((e) => '$e').toList();
+    var answerIndex = json['answerIndex'] as int? ?? 0;
+    final answer = json['answer'];
+    if (answer is String && options.isNotEmpty) {
+      final i = options.indexWhere(
+          (o) => o.toLowerCase().trim() == answer.toLowerCase().trim());
+      if (i >= 0) answerIndex = i;
+    }
+    if (answerIndex < 0 || answerIndex >= options.length) answerIndex = 0;
+    return QuizQuestion(
+      question: '${json['question'] ?? ''}',
+      options: options,
+      answerIndex: answerIndex,
+      explanation: '${json['explanation'] ?? ''}',
+    );
+  }
 }
 
 /// One fill-in-the-blank sentence. [before] and [after] surround the blank.
@@ -34,6 +52,17 @@ class BlankItem {
   });
 
   String get answer => accepted.first;
+
+  factory BlankItem.fromJson(Map<String, dynamic> json) {
+    final accepted = (json['accepted'] as List?)?.map((e) => '$e').toList() ??
+        (json['answer'] != null ? ['${json['answer']}'] : <String>[]);
+    return BlankItem(
+      before: '${json['before'] ?? ''}',
+      after: '${json['after'] ?? ''}',
+      accepted: accepted.isEmpty ? [''] : accepted,
+      hint: '${json['hint'] ?? ''}',
+    );
+  }
 
   /// Case-, space-, punctuation- and subscript-insensitive check, so "CO2",
   /// "co₂" and "carbon dioxide" can each be accepted where they mean the same.

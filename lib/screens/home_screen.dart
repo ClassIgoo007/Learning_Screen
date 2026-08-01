@@ -34,7 +34,8 @@ class HomeScreen extends StatelessWidget {
 
   void _openScience(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ScienceHubScreen()),
+      MaterialPageRoute(
+          builder: (_) => ScienceHubScreen(openAI: openAI)),
     );
   }
 

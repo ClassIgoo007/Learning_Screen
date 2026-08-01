@@ -55,7 +55,8 @@ class GamesScreen extends StatelessWidget {
           subtitle: 'Solve clues for words with the long-a sound',
           icon: Icons.grid_on_rounded,
           color: AppColors.green,
-          builder: (_) => const CrosswordIntroScreen(puzzle: kLongAPuzzle),
+          builder: (_) => CrosswordIntroScreen(
+              puzzle: kLongAPuzzle, openAI: openAI),
         ),
         GameActivity(
           title: 'Long-e Activity',
@@ -63,21 +64,23 @@ class GamesScreen extends StatelessWidget {
           icon: Icons.search_rounded,
           color: AppColors.yellow,
           builder: (_) =>
-              const ActivityIntroScreen(activity: kLongEActivity),
+              ActivityIntroScreen(activity: kLongEActivity, openAI: openAI),
         ),
         GameActivity(
           title: 'Long-i Crossword',
           subtitle: 'Fill-in-the-blank clues for long-i words',
           icon: Icons.grid_on_rounded,
           color: AppColors.blueDark,
-          builder: (_) => const CrosswordIntroScreen(puzzle: kLongIPuzzle),
+          builder: (_) => CrosswordIntroScreen(
+              puzzle: kLongIPuzzle, openAI: openAI),
         ),
         GameActivity(
           title: 'Long-o Crossword',
           subtitle: 'Float through clues for words with the long-o sound',
           icon: Icons.grid_on_rounded,
           color: AppColors.blue,
-          builder: (_) => const CrosswordIntroScreen(puzzle: kLongOPuzzle),
+          builder: (_) => CrosswordIntroScreen(
+              puzzle: kLongOPuzzle, openAI: openAI),
         ),
         GameActivity(
           title: 'Long-u Activity',
@@ -85,14 +88,15 @@ class GamesScreen extends StatelessWidget {
           icon: Icons.search_rounded,
           color: AppColors.green,
           builder: (_) =>
-              const ActivityIntroScreen(activity: kLongUActivity),
+              ActivityIntroScreen(activity: kLongUActivity, openAI: openAI),
         ),
         GameActivity(
           title: 'oi & oy Crossword',
           subtitle: "Solve clues for words with the sound in 'boy'",
           icon: Icons.grid_on_rounded,
           color: AppColors.red,
-          builder: (_) => const CrosswordIntroScreen(puzzle: kOiOyPuzzle),
+          builder: (_) => CrosswordIntroScreen(
+              puzzle: kOiOyPuzzle, openAI: openAI),
         ),
       ];
 

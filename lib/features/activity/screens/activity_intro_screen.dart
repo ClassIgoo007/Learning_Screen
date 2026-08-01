@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/openai_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../models/activity.dart';
@@ -8,14 +9,19 @@ import 'activity_screen.dart';
 /// Intro/welcome screen for a vowel activity, mirroring the other games'
 /// intro pages: a hero illustration, heading, and a play button.
 class ActivityIntroScreen extends StatelessWidget {
-  const ActivityIntroScreen({super.key, required this.activity});
+  const ActivityIntroScreen({
+    super.key,
+    required this.activity,
+    required this.openAI,
+  });
 
   final VowelActivity activity;
+  final OpenAIService openAI;
 
   void _play(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ActivityScreen(activity: activity),
+        builder: (_) => ActivityScreen(activity: activity, openAI: openAI),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/openai_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../models/science_content.dart';
@@ -10,9 +11,14 @@ import 'science_quiz_screen.dart';
 /// Topic home: introduces the science reading topic and launches either
 /// the Q&A or fill-in-the-blanks activity.
 class TopicHomeScreen extends StatelessWidget {
-  const TopicHomeScreen({super.key, required this.topic});
+  const TopicHomeScreen({
+    super.key,
+    required this.topic,
+    required this.openAI,
+  });
 
   final ScienceTopic topic;
+  final OpenAIService openAI;
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +86,8 @@ class TopicHomeScreen extends StatelessWidget {
                           preview: topic.quiz.diagram,
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  ScienceQuizScreen(topic: topic),
+                              builder: (_) => ScienceQuizScreen(
+                                  topic: topic, openAI: openAI),
                             ),
                           ),
                         ),
@@ -96,8 +102,8 @@ class TopicHomeScreen extends StatelessWidget {
                           preview: topic.blanks.diagram,
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  ScienceBlanksScreen(topic: topic),
+                              builder: (_) => ScienceBlanksScreen(
+                                  topic: topic, openAI: openAI),
                             ),
                           ),
                         ),

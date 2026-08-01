@@ -91,6 +91,31 @@ class CrosswordPuzzle {
   /// Word bank, alphabetized.
   List<String> get wordBank =>
       (entries.map((e) => e.answer).toList()..sort());
+
+  /// Same grid and answers, with fresh clue text (same entry order).
+  CrosswordPuzzle withClues(List<String> clues) {
+    assert(clues.length == entries.length);
+    return CrosswordPuzzle(
+      title: title,
+      subtitle: subtitle,
+      rows: rows,
+      cols: cols,
+      image: image,
+      name: name,
+      tagline: tagline,
+      entries: [
+        for (var i = 0; i < entries.length; i++)
+          CrosswordEntry(
+            number: entries[i].number,
+            direction: entries[i].direction,
+            row: entries[i].row,
+            col: entries[i].col,
+            answer: entries[i].answer,
+            clue: clues[i].trim().isEmpty ? entries[i].clue : clues[i].trim(),
+          ),
+      ],
+    );
+  }
 }
 
 /// Original "Words with Long a" puzzle (grid design validated: every

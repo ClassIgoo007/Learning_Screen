@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../../services/openai_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../logic/crossword_controller.dart';
@@ -8,9 +10,14 @@ import '../widgets/crossword_grid.dart';
 import '../widgets/panels.dart';
 
 class CrosswordScreen extends StatefulWidget {
-  const CrosswordScreen({super.key, required this.puzzle});
+  const CrosswordScreen({
+    super.key,
+    required this.puzzle,
+    required this.openAI,
+  });
 
   final CrosswordPuzzle puzzle;
+  final OpenAIService openAI;
 
   @override
   State<CrosswordScreen> createState() => _CrosswordScreenState();
@@ -19,17 +26,55 @@ class CrosswordScreen extends StatefulWidget {
 class _CrosswordScreenState extends State<CrosswordScreen> {
   late final CrosswordController _controller =
       CrosswordController(widget.puzzle);
+  final FocusNode _focusNode = FocusNode(debugLabel: 'crosswordKeys');
+  bool _generating = false;
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_maybeCelebrate);
+    _controller.addListener(_onControllerChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onControllerChanged() {
+    // Keep hardware-keyboard focus after taps / on-screen keys.
+    if (!_focusNode.hasFocus) {
+      _focusNode.requestFocus();
+    }
+    _maybeCelebrate();
+  }
+
+  /// Accept physical / laptop / Bluetooth keyboard input in addition to
+  /// the on-screen letter pad.
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.backspace ||
+        key == LogicalKeyboardKey.delete) {
+      _controller.backspace();
+      return KeyEventResult.handled;
+    }
+
+    // Prefer the typed character (handles shift / locale); fall back to
+    // the key label for platforms that leave character null.
+    final raw = (event.character ?? key.keyLabel).trim();
+    if (raw.length == 1) {
+      final upper = raw.toUpperCase();
+      final code = upper.codeUnitAt(0);
+      if (code >= 65 && code <= 90) {
+        _controller.typeLetter(upper);
+        return KeyEventResult.handled;
+      }
+    }
+    return KeyEventResult.ignored;
   }
 
   bool _celebrated = false;
@@ -43,7 +88,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
           builder: (context) => AlertDialog(
             title: const Text('Great job!'),
             content: Text(
-                'You solved every word in the ${widget.puzzle.name} puzzle!'),
+                'You solved every word in the ${_controller.puzzle.name} puzzle!'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -70,22 +115,27 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: AppColors.skyGradient),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _topBar(),
-              Expanded(
-                child: LayoutBuilder(builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 760;
-                  return wide ? _wideLayout() : _narrowLayout();
-                }),
-              ),
-              _actionBar(),
-            ],
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _onKeyEvent,
+      child: Container(
+        decoration: const BoxDecoration(gradient: AppColors.skyGradient),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _topBar(),
+                Expanded(
+                  child: LayoutBuilder(builder: (context, constraints) {
+                    final wide = constraints.maxWidth >= 760;
+                    return wide ? _wideLayout() : _narrowLayout();
+                  }),
+                ),
+                _actionBar(),
+              ],
+            ),
           ),
         ),
       ),
@@ -100,10 +150,13 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
           const CircleBackButton(),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              widget.puzzle.title,
-              style: const TextStyle(
-                  fontSize: 20, fontWeight: FontWeight.w800),
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) => Text(
+                _controller.puzzle.title,
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.w800),
+              ),
             ),
           ),
           Material(
@@ -146,27 +199,40 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
       ),
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (context, _) => Row(
+        builder: (context, _) => Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: AppButton(
-                label: 'Reveal',
-                icon: Icons.lightbulb_rounded,
-                color: AppColors.yellow,
-                textColor: AppColors.ink,
-                enabled: _controller.selected != null,
-                onTap: _controller.revealSelectedWord,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'Reveal',
+                    icon: Icons.lightbulb_rounded,
+                    color: AppColors.yellow,
+                    textColor: AppColors.ink,
+                    enabled: _controller.selected != null && !_generating,
+                    onTap: _controller.revealSelectedWord,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    label: 'Check',
+                    icon: Icons.check_rounded,
+                    color: AppColors.green,
+                    enabled: _controller.filledCells != 0 && !_generating,
+                    onTap: _checkAnswers,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppButton(
-                label: 'Check',
-                icon: Icons.check_rounded,
-                color: AppColors.green,
-                enabled: _controller.filledCells != 0,
-                onTap: _controller.checkAnswers,
-              ),
+            const SizedBox(height: 10),
+            AppButton(
+              label: _generating ? 'Generating…' : 'New AI Questions',
+              icon: Icons.auto_awesome_rounded,
+              color: AppColors.blue,
+              enabled: !_generating,
+              onTap: _generateNewClues,
             ),
           ],
         ),
@@ -174,19 +240,123 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
     );
   }
 
+  void _checkAnswers() {
+    _controller.checkAnswers();
+    if (!mounted) return;
+
+    if (_controller.isPuzzleSolved) {
+      // Celebration dialog is shown by the controller listener.
+      return;
+    }
+
+    final wrongLetters = _controller.wrongFilledCells;
+    final wrongWords = _controller.wrongEntryCount;
+    final correct = _controller.correctFilledCells;
+
+    if (wrongLetters > 0) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.cancel_rounded, color: AppColors.red),
+              SizedBox(width: 8),
+              Expanded(child: Text('Some answers are wrong')),
+            ],
+          ),
+          content: Text(
+            'Wrong answers stay marked in red on the grid and on the clue '
+            'list until you change those letters.\n\n'
+            '${wrongWords == 1 ? '1 clue' : '$wrongWords clues'} marked wrong'
+            ' ($wrongLetters letter${wrongLetters == 1 ? '' : 's'}).'
+            '${correct > 0 ? '\n$correct letter(s) look correct so far.' : ''}'
+            '\n\nYou can fix them, or tap New AI Questions for fresh clues.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _generateNewClues();
+              },
+              child: const Text('New AI Questions'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.blue),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: AppColors.green),
+            SizedBox(width: 8),
+            Expanded(child: Text('Looking good!')),
+          ],
+        ),
+        content: Text(
+          'The $correct letter(s) you filled in are correct. '
+          'Keep going to finish the puzzle.',
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.green),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateNewClues() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final next = await widget.openAI
+          .generateCrosswordClues(puzzle: _controller.puzzle);
+      if (!mounted) return;
+      _celebrated = false;
+      _controller.replacePuzzle(next); // fresh clues + clear progress
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Loaded new AI clues for the same words. Fill the grid again!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is HttpException ? e.message : '$e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate new clues: $message')),
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
+
   Widget _header() => Padding(
         padding: const EdgeInsets.only(bottom: 14),
-        child: Text(
-          widget.puzzle.subtitle,
-          style: const TextStyle(
-              fontSize: 14.5, height: 1.35, color: AppColors.inkSoft),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) => Text(
+            _controller.puzzle.subtitle,
+            style: const TextStyle(
+                fontSize: 14.5, height: 1.35, color: AppColors.inkSoft),
+          ),
         ),
       );
 
   Widget _illustration({double height = 160}) => ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Image.asset(
-          widget.puzzle.image,
+          _controller.puzzle.image,
           height: height,
           fit: BoxFit.contain,
         ),

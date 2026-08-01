@@ -33,21 +33,41 @@ void main() {
   });
 
   group('word search', () {
-    test('selecting a word run marks it found (either tap order)', () {
+    test('dragging across a word run marks it found (either direction)', () {
       final c = ActivityController(kLongEActivity);
       final placement = kLongEActivity
           .findPlacements()
           .firstWhere((p) => p.word == 'TEAM');
-      c.tapGridCell(placement.cells.last); // backwards on purpose
-      c.tapGridCell(placement.cells.first);
+      c.selectWordRun(placement.cells.last, placement.cells.first);
       expect(c.isWordFound('TEAM'), isTrue);
     });
 
     test('non-word selection finds nothing', () {
       final c = ActivityController(kLongEActivity);
-      c.tapGridCell(const Point(0, 0));
-      c.tapGridCell(const Point(0, 3));
+      c.selectWordRun(const Point(0, 0), const Point(0, 3));
       expect(c.foundWords, isEmpty);
+    });
+
+    test('crossing a word fills the matching empty sentence', () {
+      final c = ActivityController(kLongEActivity);
+      final placement = kLongEActivity
+          .findPlacements()
+          .firstWhere((p) => p.word == 'TEAM');
+      c.selectWordRun(placement.cells.first, placement.cells.last);
+      expect(c.isWordFound('TEAM'), isTrue);
+      expect(c.answerFor(3), 'TEAM'); // sentence 3 answer is TEAM
+    });
+
+    test('crossing fills the selected blank even if it is a different word',
+        () {
+      final c = ActivityController(kLongEActivity);
+      c.tapBlank(0); // expects ZEBRA
+      final placement = kLongEActivity
+          .findPlacements()
+          .firstWhere((p) => p.word == 'TEAM');
+      c.selectWordRun(placement.cells.first, placement.cells.last);
+      expect(c.answerFor(0), 'TEAM');
+      expect(c.isWordFound('TEAM'), isTrue);
     });
 
     test('completing everything sets isComplete', () {
@@ -57,8 +77,7 @@ void main() {
         c.tapBankWord(s.answer);
       }
       for (final p in kLongEActivity.findPlacements()) {
-        c.tapGridCell(p.cells.first);
-        c.tapGridCell(p.cells.last);
+        c.selectWordRun(p.cells.first, p.cells.last);
       }
       expect(c.isComplete, isTrue);
     });

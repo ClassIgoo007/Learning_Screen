@@ -45,6 +45,25 @@ class VowelActivity {
     required this.tagline,
   });
 
+  /// Keep branding from [seed], swap in a fresh word bank / sentences / grid.
+  factory VowelActivity.fromGenerated({
+    required VowelActivity seed,
+    required List<String> words,
+    required List<SentenceItem> sentences,
+    required List<String> gridRows,
+  }) {
+    return VowelActivity(
+      title: seed.title,
+      subtitle: seed.subtitle,
+      words: words,
+      sentences: sentences,
+      gridRows: gridRows,
+      image: seed.image,
+      name: seed.name,
+      tagline: seed.tagline,
+    );
+  }
+
   int get rows => gridRows.length;
   int get cols => gridRows.first.length;
 
@@ -90,8 +109,8 @@ class VowelActivity {
 const VowelActivity kLongEActivity = VowelActivity(
   title: 'Words with Long e',
   subtitle: 'Long e words may be spelled e, ee, ea, or ey. '
-      'Tap a blank, then tap the word that finishes the sentence. '
-      'Then find and circle each word in the puzzle!',
+      'Tap a blank, then drag across that word in the puzzle '
+      '(or tap it in the Word Bank).',
   image: 'assets/celebration.png',
   name: 'Long e',
   tagline: 'Finish the sentences, then find the words in the puzzle',
@@ -132,8 +151,8 @@ const VowelActivity kLongEActivity = VowelActivity(
 const VowelActivity kLongUActivity = VowelActivity(
   title: 'Words with Long u',
   subtitle: 'Long u words may be spelled u, u_e, or ue. '
-      'Tap a blank, then tap the word that finishes the sentence. '
-      'Then find and circle each word in the puzzle!',
+      'Tap a blank, then drag across that word in the puzzle '
+      '(or tap it in the Word Bank).',
   image: 'assets/longu_hero.png',
   name: 'Long u',
   tagline: 'Finish the sentences, then find the words in the puzzle',

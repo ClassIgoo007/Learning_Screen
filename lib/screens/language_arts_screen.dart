@@ -49,7 +49,7 @@ class LanguageArtsScreen extends StatelessWidget {
           icon: Icons.grid_on_rounded,
           color: AppColors.green,
           image: 'assets/sec_crosswords.png',
-          builder: (_) => const CrosswordsHubScreen(),
+          builder: (_) => CrosswordsHubScreen(openAI: openAI),
         ),
         HubCardItem(
           title: 'Activities',
@@ -57,7 +57,7 @@ class LanguageArtsScreen extends StatelessWidget {
           icon: Icons.search_rounded,
           color: AppColors.yellow,
           image: 'assets/sec_activities.png',
-          builder: (_) => const ActivitiesHubScreen(),
+          builder: (_) => ActivitiesHubScreen(openAI: openAI),
         ),
       ],
     );
@@ -66,7 +66,9 @@ class LanguageArtsScreen extends StatelessWidget {
 
 /// All crossword games in one place.
 class CrosswordsHubScreen extends StatelessWidget {
-  const CrosswordsHubScreen({super.key});
+  const CrosswordsHubScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   static const _puzzles = [
     (kLongAPuzzle, AppColors.green),
@@ -93,7 +95,8 @@ class CrosswordsHubScreen extends StatelessWidget {
             icon: Icons.grid_on_rounded,
             color: color,
             image: puzzle.image,
-            builder: (_) => CrosswordIntroScreen(puzzle: puzzle),
+            builder: (_) =>
+                CrosswordIntroScreen(puzzle: puzzle, openAI: openAI),
           ),
       ],
     );
@@ -102,7 +105,9 @@ class CrosswordsHubScreen extends StatelessWidget {
 
 /// All sentence + word-search activities in one place.
 class ActivitiesHubScreen extends StatelessWidget {
-  const ActivitiesHubScreen({super.key});
+  const ActivitiesHubScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   static const _activities = [
     (kLongEActivity, AppColors.yellow),
@@ -127,7 +132,8 @@ class ActivitiesHubScreen extends StatelessWidget {
             icon: Icons.search_rounded,
             color: color,
             image: activity.image,
-            builder: (_) => ActivityIntroScreen(activity: activity),
+            builder: (_) =>
+                ActivityIntroScreen(activity: activity, openAI: openAI),
           ),
       ],
     );

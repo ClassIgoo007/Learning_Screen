@@ -98,7 +98,11 @@ class CrosswordGrid extends StatelessWidget {
                 style: TextStyle(
                   fontSize: size * 0.55,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
+                  color: status == CellStatus.wrong
+                      ? AppColors.red
+                      : status == CellStatus.correct
+                          ? AppColors.greenDark
+                          : AppColors.ink,
                 ),
               ),
             ),

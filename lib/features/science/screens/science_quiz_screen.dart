@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/openai_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../logic/controllers.dart';
 import '../models/science_content.dart';
 import '../widgets/science_widgets.dart';
 
-/// Multiple-choice Q&A activity for a science reading topic.
+/// Multiple-choice Q&A: select answers, then press Check to grade.
 class ScienceQuizScreen extends StatefulWidget {
-  const ScienceQuizScreen({super.key, required this.topic});
+  const ScienceQuizScreen({
+    super.key,
+    required this.topic,
+    required this.openAI,
+  });
 
   final ScienceTopic topic;
+  final OpenAIService openAI;
 
   @override
   State<ScienceQuizScreen> createState() => _ScienceQuizScreenState();
@@ -19,11 +25,74 @@ class ScienceQuizScreen extends StatefulWidget {
 class _ScienceQuizScreenState extends State<ScienceQuizScreen> {
   late final QuizController _controller =
       QuizController(widget.topic.questions);
+  bool _generating = false;
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _check() {
+    if (_controller.selectedCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Select at least one answer, then press Check.')),
+      );
+      return;
+    }
+    _controller.check();
+    final missing = _controller.total - _controller.selectedCount;
+    final wrong = _controller.wrongCount;
+    if (!mounted) return;
+    if (wrong > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.red,
+          content: Text(
+            wrong == 1
+                ? '1 answer is wrong. Look for the red messages below.'
+                : '$wrong answers are wrong. Look for the red messages below.',
+          ),
+        ),
+      );
+    } else if (missing == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.green,
+          content: Text('Nice work — every answer is correct!'),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                '$missing question(s) still unanswered — the rest were checked.')),
+      );
+    }
+  }
+
+  Future<void> _generateNew() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final questions =
+          await widget.openAI.generateScienceQuiz(topic: widget.topic);
+      if (!mounted) return;
+      _controller.replaceQuestions(questions);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Loaded ${questions.length} new AI questions. Select answers, then Check.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate questions: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
   }
 
   @override
@@ -41,7 +110,7 @@ class _ScienceQuizScreenState extends State<ScienceQuizScreen> {
                 child: AnimatedBuilder(
                   animation: _controller,
                   builder: (context, _) => ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                     children: [
                       if (topic.quiz.hasPassage)
                         PassageCard(
@@ -65,19 +134,23 @@ class _ScienceQuizScreenState extends State<ScienceQuizScreen> {
                       ],
                       const SizedBox(height: 14),
                       const Text(
-                        'Read each question and tap the answer you think is right. '
-                        'You will see straight away whether it was correct.',
+                        'Tap an answer for each question, then press Check. '
+                        'If an answer is wrong, you will see a clear message.',
                         style: TextStyle(fontSize: 14.5, color: AppColors.ink),
                       ),
                       const SizedBox(height: 14),
-                      ScoreCard(
-                        score: _controller.score,
-                        total: _controller.total,
-                        label:
-                            'Answered ${_controller.answeredCount} of ${_controller.total}',
-                        accent: topic.accent,
-                      ),
-                      const SizedBox(height: 14),
+                      if (_controller.checked)
+                        ScoreCard(
+                          score: _controller.score,
+                          total: _controller.selectedCount,
+                          label: _controller.wrongCount == 0 &&
+                                  _controller.selectedCount ==
+                                      _controller.total
+                              ? 'Perfect! Every answer is right.'
+                              : 'Checked ${_controller.selectedCount} of ${_controller.total}',
+                          accent: topic.accent,
+                        ),
+                      if (_controller.checked) const SizedBox(height: 14),
                       for (var i = 0; i < _controller.total; i++)
                         _QuestionCard(
                           number: i + 1,
@@ -87,38 +160,11 @@ class _ScienceQuizScreenState extends State<ScienceQuizScreen> {
                           accent: topic.accent,
                           onSelect: (option) => _controller.select(i, option),
                         ),
-                      if (_controller.isFinished) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: topic.accent.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                'All done — ${_controller.score} / '
-                                '${_controller.total} correct!',
-                                style: const TextStyle(
-                                    fontSize: 17, fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 10),
-                              AppButton(
-                                label: 'Try again',
-                                icon: Icons.refresh_rounded,
-                                color: topic.accent,
-                                onTap: _controller.reset,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
               ),
+              _actionBar(),
             ],
           ),
         ),
@@ -159,6 +205,64 @@ class _ScienceQuizScreenState extends State<ScienceQuizScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _actionBar() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x12203A5C),
+              blurRadius: 20,
+              offset: Offset(0, -6)),
+        ],
+      ),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: AppButton(
+                    label: 'Check answers',
+                    icon: Icons.check_rounded,
+                    color: widget.topic.accent,
+                    enabled: _controller.selectedCount > 0 && !_generating,
+                    onTap: _check,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: AppButton(
+                    label: 'Reset',
+                    icon: Icons.refresh_rounded,
+                    outlined: true,
+                    enabled: !_generating,
+                    onTap: _controller.reset,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            AppButton(
+              label: _generating ? 'Generating…' : 'New AI Questions',
+              icon: Icons.auto_awesome_rounded,
+              color: AppColors.blue,
+              enabled: !_generating,
+              onTap: _generateNew,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -223,7 +327,7 @@ class _QuestionCard extends StatelessWidget {
               label: question.options[i],
               state: _stateFor(i),
               accent: accent,
-              onTap: revealed ? null : () => onSelect(i),
+              onTap: () => onSelect(i),
             ),
           if (revealed) ...[
             const SizedBox(height: 8),
@@ -240,7 +344,7 @@ class _QuestionCard extends StatelessWidget {
                   Icon(
                     correct
                         ? Icons.check_circle_rounded
-                        : Icons.lightbulb_rounded,
+                        : Icons.cancel_rounded,
                     size: 18,
                     color: correct ? AppColors.greenDark : AppColors.red,
                   ),
@@ -249,8 +353,8 @@ class _QuestionCard extends StatelessWidget {
                     child: Text(
                       correct
                           ? 'Correct! ${question.explanation}'
-                          : 'The answer is "${question.answer}". '
-                              '${question.explanation}',
+                          : 'That answer is wrong. The correct answer is '
+                              '"${question.answer}". ${question.explanation}',
                       style: const TextStyle(fontSize: 13.5),
                     ),
                   ),
@@ -286,7 +390,7 @@ class _OptionTile extends StatelessWidget {
   final String label;
   final _OptionState state;
   final Color accent;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

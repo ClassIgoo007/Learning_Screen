@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/openai_service.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../models/crossword.dart';
@@ -8,14 +9,19 @@ import 'crossword_screen.dart';
 /// Intro/welcome screen for the crossword game, mirroring the phonics
 /// welcome page: a hero illustration, heading, and a play button.
 class CrosswordIntroScreen extends StatelessWidget {
-  const CrosswordIntroScreen({super.key, this.puzzle = kLongAPuzzle});
+  const CrosswordIntroScreen({
+    super.key,
+    this.puzzle = kLongAPuzzle,
+    required this.openAI,
+  });
 
   final CrosswordPuzzle puzzle;
+  final OpenAIService openAI;
 
   void _play(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => CrosswordScreen(puzzle: puzzle),
+        builder: (_) => CrosswordScreen(puzzle: puzzle, openAI: openAI),
       ),
     );
   }

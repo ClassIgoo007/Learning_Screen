@@ -14,13 +14,26 @@ void main() {
       }
     });
 
-    test('DNA quiz accepts one answer per question', () {
+    test('quiz selects without grading until check', () {
       final c = QuizController(kDnaTopic.questions);
       c.select(0, 1); // double helix
+      expect(c.isRevealed(0), isFalse);
+      expect(c.selectionFor(0), 1);
+      c.select(0, 0); // can change before check
+      expect(c.selectionFor(0), 0);
+      c.select(0, 1);
+      c.check();
       expect(c.isRevealed(0), isTrue);
       expect(c.isCorrect(0), isTrue);
-      c.select(0, 0); // locked — should stay correct
-      expect(c.selectionFor(0), 1);
+      expect(c.wrongCount, 0);
+    });
+
+    test('quiz reports wrong answers after check', () {
+      final c = QuizController(kDnaTopic.questions);
+      c.select(0, 0); // wrong for DNA shape
+      c.check();
+      expect(c.isCorrect(0), isFalse);
+      expect(c.wrongCount, 1);
     });
 
     test('photosynthesis blanks accept alternate spellings', () {
@@ -28,6 +41,14 @@ void main() {
       c.setAnswer(0, 'carbon dioxide');
       c.check();
       expect(c.isCorrect(0), isTrue);
+    });
+
+    test('blanks report wrong answers after check', () {
+      final c = BlanksController(kPhotosynthesisTopic.blankItems);
+      c.setAnswer(0, 'not-the-answer');
+      c.check();
+      expect(c.isCorrect(0), isFalse);
+      expect(c.wrongCount, 1);
     });
   });
 }

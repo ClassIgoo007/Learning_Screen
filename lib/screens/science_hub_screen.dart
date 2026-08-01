@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../features/science/data/biology_topics.dart';
 import '../features/science/screens/topic_home_screen.dart';
+import '../services/openai_service.dart';
 import '../widgets/section_hub.dart';
 
 /// Top-level Science hub with Biology, Physics, and Chemistry branches.
 class ScienceHubScreen extends StatelessWidget {
-  const ScienceHubScreen({super.key});
+  const ScienceHubScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,7 @@ class ScienceHubScreen extends StatelessWidget {
           icon: Icons.biotech_rounded,
           color: const Color(0xFF00897B),
           image: 'assets/sec_biology.png',
-          builder: (_) => const BiologyHubScreen(),
+          builder: (_) => BiologyHubScreen(openAI: openAI),
         ),
         HubCardItem(
           title: 'Physics',
@@ -57,9 +60,11 @@ class ScienceHubScreen extends StatelessWidget {
   }
 }
 
-/// Biology catalog: DNA, photosynthesis, transcription & translation.
+/// Biology catalog of reading topics.
 class BiologyHubScreen extends StatelessWidget {
-  const BiologyHubScreen({super.key});
+  const BiologyHubScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +84,7 @@ class BiologyHubScreen extends StatelessWidget {
             icon: Icons.menu_book_rounded,
             color: topic.accent,
             image: topic.heroImage,
-            builder: (_) => TopicHomeScreen(topic: topic),
+            builder: (_) => TopicHomeScreen(topic: topic, openAI: openAI),
           ),
       ],
     );
