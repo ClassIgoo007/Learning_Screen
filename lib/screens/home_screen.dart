@@ -4,11 +4,10 @@ import '../models/quiz_session.dart';
 import '../services/openai_service.dart';
 import '../services/tts_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/common.dart';
-import 'games_screen.dart';
+import 'language_arts_screen.dart';
+import 'science_hub_screen.dart';
 
-/// The main landing page for the whole app. Leads into the games page
-/// where the different mini-apps can be chosen.
+/// Main landing page: choose Language Arts or Science.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
@@ -21,11 +20,21 @@ class HomeScreen extends StatelessWidget {
   final TtsService tts;
   final SessionStore store;
 
-  void _openGames(BuildContext context) {
+  void _openLanguageArts(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => GamesScreen(openAI: openAI, tts: tts, store: store),
+        builder: (_) => LanguageArtsScreen(
+          openAI: openAI,
+          tts: tts,
+          store: store,
+        ),
       ),
+    );
+  }
+
+  void _openScience(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ScienceHubScreen()),
     );
   }
 
@@ -69,26 +78,120 @@ class HomeScreen extends StatelessWidget {
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'A hub of playful reading and word games',
+                    'Pick a subject and start exploring',
                     style: TextStyle(fontSize: 15, color: AppColors.inkSoft),
                   ),
                 ),
                 Expanded(
-                  child: Center(
-                    child: Image.asset(
-                      'assets/home_hero.png',
-                      fit: BoxFit.contain,
-                    ),
+                  child: ListView(
+                    padding: const EdgeInsets.only(top: 20),
+                    children: [
+                      _MainSectionCard(
+                        title: 'Language Arts',
+                        subtitle: 'Phonics, crosswords, and word activities',
+                        image: 'assets/sec_phonics.png',
+                        color: AppColors.blue,
+                        icon: Icons.menu_book_rounded,
+                        onTap: () => _openLanguageArts(context),
+                      ),
+                      const SizedBox(height: 16),
+                      _MainSectionCard(
+                        title: 'Science',
+                        subtitle: 'Biology, physics, and chemistry reading labs',
+                        image: 'assets/sec_science.png',
+                        color: const Color(0xFF00897B),
+                        icon: Icons.biotech_rounded,
+                        onTap: () => _openScience(context),
+                      ),
+                    ],
                   ),
-                ),
-                AppButton(
-                  label: 'Explore Games',
-                  icon: Icons.sports_esports_rounded,
-                  color: AppColors.blue,
-                  onTap: () => _openGames(context),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MainSectionCard extends StatelessWidget {
+  const _MainSectionCard({
+    required this.title,
+    required this.subtitle,
+    required this.image,
+    required this.color,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String image;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: kCardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(26),
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(26)),
+                child: Image.asset(
+                  image,
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(icon, color: color, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title,
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 4),
+                          Text(subtitle,
+                              style: const TextStyle(
+                                  fontSize: 13.5,
+                                  color: AppColors.inkSoft)),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_rounded, color: color),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
