@@ -5,6 +5,7 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../logic/controllers.dart';
 import '../models/science_content.dart';
+import '../widgets/chemical_text.dart';
 import '../widgets/science_widgets.dart';
 
 /// Multiple-choice Q&A: select answers, then press Check to grade.
@@ -315,7 +316,7 @@ class _QuestionCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(question.question,
+                child: ChemicalText(question.question,
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w700)),
               ),
@@ -350,7 +351,7 @@ class _QuestionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: ChemicalText(
                       correct
                           ? 'Correct! ${question.explanation}'
                           : 'That answer is wrong. The correct answer is '
@@ -434,7 +435,8 @@ class _OptionTile extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(label, style: const TextStyle(fontSize: 15)),
+                  child: ChemicalText(label,
+                      style: const TextStyle(fontSize: 15)),
                 ),
                 if (icon != null)
                   Icon(icon,

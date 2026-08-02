@@ -228,7 +228,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
             ),
             const SizedBox(height: 10),
             AppButton(
-              label: _generating ? 'Generating…' : 'New AI Questions',
+              label: _generating ? 'Generating…' : 'New AI Puzzle',
               icon: Icons.auto_awesome_rounded,
               color: AppColors.blue,
               enabled: !_generating,
@@ -270,7 +270,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
             '${wrongWords == 1 ? '1 clue' : '$wrongWords clues'} marked wrong'
             ' ($wrongLetters letter${wrongLetters == 1 ? '' : 's'}).'
             '${correct > 0 ? '\n$correct letter(s) look correct so far.' : ''}'
-            '\n\nYou can fix them, or tap New AI Questions for fresh clues.',
+            '\n\nYou can fix them, or tap New AI Puzzle for a fresh word bank.',
           ),
           actions: [
             TextButton(
@@ -278,7 +278,7 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                 Navigator.pop(context);
                 _generateNewClues();
               },
-              child: const Text('New AI Questions'),
+              child: const Text('New AI Puzzle'),
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.blue),
@@ -321,20 +321,20 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
     setState(() => _generating = true);
     try {
       final next = await widget.openAI
-          .generateCrosswordClues(puzzle: _controller.puzzle);
+          .generateCrosswordPuzzle(seed: _controller.puzzle);
       if (!mounted) return;
       _celebrated = false;
-      _controller.replacePuzzle(next); // fresh clues + clear progress
+      _controller.replacePuzzle(next); // new words + grid + clear progress
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text(
-                'Loaded new AI clues for the same words. Fill the grid again!')),
+                'Loaded a new AI word bank, clues, and crossword grid!')),
       );
     } catch (e) {
       if (!mounted) return;
       final message = e is HttpException ? e.message : '$e';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not generate new clues: $message')),
+        SnackBar(content: Text('Could not generate a new puzzle: $message')),
       );
     } finally {
       if (mounted) setState(() => _generating = false);

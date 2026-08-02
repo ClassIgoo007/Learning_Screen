@@ -160,7 +160,7 @@ class CrosswordController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Swap in a puzzle that keeps the same grid/answers but new clue text.
+  /// Swap in a new puzzle (new words/grid or clue-only refresh).
   void replacePuzzle(CrosswordPuzzle next, {bool keepProgress = false}) {
     _puzzle = next;
     if (!keepProgress) {

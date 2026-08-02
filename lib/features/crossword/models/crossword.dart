@@ -60,6 +60,25 @@ class CrosswordPuzzle {
     required this.tagline,
   });
 
+  /// Same branding as [seed], with a freshly built grid and word bank.
+  factory CrosswordPuzzle.fromGenerated({
+    required CrosswordPuzzle seed,
+    required int rows,
+    required int cols,
+    required List<CrosswordEntry> entries,
+  }) {
+    return CrosswordPuzzle(
+      title: seed.title,
+      subtitle: seed.subtitle,
+      rows: rows,
+      cols: cols,
+      image: seed.image,
+      name: seed.name,
+      tagline: seed.tagline,
+      entries: entries,
+    );
+  }
+
   /// Number of words to solve.
   int get wordCount => entries.length;
 

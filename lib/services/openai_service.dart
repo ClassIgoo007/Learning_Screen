@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../features/activity/logic/word_search_builder.dart';
 import '../features/activity/models/activity.dart';
+import '../features/crossword/logic/crossword_builder.dart';
 import '../features/crossword/models/crossword.dart';
 import '../features/science/models/science_content.dart';
 import '../models/worksheet.dart';
@@ -116,6 +117,27 @@ Rules:
 - Keep clues short (under 12 words), kid-friendly, grades 3–5.
 - Do not include the answer word in the clue.
 - Across and Down entries with the same number are DIFFERENT words — each needs its own clue.
+''';
+
+  static const _crosswordPuzzlePrompt = '''
+You write fresh elementary phonics crossword word banks with clues.
+Respond with ONLY a JSON object, no markdown fences, in exactly this shape:
+
+{
+  "words": [
+    {"answer": "PAINT", "clue": "colored liquid used with a brush"},
+    {"answer": "NAME", "clue": "what people call you"}
+  ]
+}
+
+Rules:
+- "words" must contain exactly the requested count of UNIQUE uppercase answers.
+- Every answer must clearly teach the requested vowel sound / spelling patterns.
+- Prefer common grade 3–5 vocabulary; each answer 3–8 letters (A–Z only).
+- Do NOT reuse any word from the "avoid" list.
+- Each clue must point clearly to its answer, under 12 words, kid-friendly.
+- Do not include the answer word inside its clue.
+- Prefer words that share letters with each other so they can cross in a grid.
 ''';
 
   static const _vowelActivityPrompt = '''
@@ -330,6 +352,107 @@ Rules:
     // Keep sentence order aligned with the word bank.
     final sentences = [for (final w in words) byAnswer[w]!];
     return (words: words, sentences: sentences);
+  }
+
+  /// Brand-new crossword: new word bank, new clues, rebuilt intersecting grid.
+  Future<CrosswordPuzzle> generateCrosswordPuzzle({
+    required CrosswordPuzzle seed,
+    CrosswordBuilder? gridBuilder,
+  }) async {
+    final expected = seed.entries.length;
+    final builder = gridBuilder ?? CrosswordBuilder();
+    Object? lastError;
+
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        final map = await _chatJson(
+          system: _crosswordPuzzlePrompt,
+          user: _crosswordPuzzleUserPrompt(seed, expected, attempt: attempt),
+          temperature: attempt == 0 ? 0.9 : 0.7,
+        );
+        final parsed = parseCrosswordPuzzleResponse(map, expected: expected);
+        return builder.build(
+          seed: seed,
+          words: parsed.words,
+          clues: parsed.clues,
+        );
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (lastError is HttpException) throw lastError;
+    throw HttpException(
+        'Could not generate a new crossword: ${lastError ?? 'unknown error'}');
+  }
+
+  String _crosswordPuzzleUserPrompt(
+    CrosswordPuzzle seed,
+    int expected, {
+    required int attempt,
+  }) {
+    final spelling = _crosswordSpellingHintFor(seed);
+    final avoid = seed.entries.map((e) => e.answer).toSet().join(', ');
+    final retry = attempt == 0
+        ? ''
+        : '\nIMPORTANT: Previous reply was invalid. Return exactly $expected '
+            'unique answer/clue pairs that can cross-share letters.\n';
+    return 'Theme: ${seed.name}\n'
+        'Spelling patterns: $spelling\n'
+        'Generate exactly $expected new crossword words with clues.\n'
+        'Avoid reusing these words: $avoid\n'
+        '$retry';
+  }
+
+  static String _crosswordSpellingHintFor(CrosswordPuzzle seed) {
+    final key = seed.name.toLowerCase();
+    if (key.contains('long a')) {
+      return 'long a sound spelled a_e, ai, or ay';
+    }
+    if (key.contains('long i')) {
+      return 'long i sound spelled i, i_e, or y';
+    }
+    if (key.contains('long o')) {
+      return 'long o sound spelled o, o_e, or oa';
+    }
+    if (key.contains('oi') || key.contains('oy')) {
+      return 'oi / oy sound as in "boy" or "coin"';
+    }
+    return '${seed.name} phonics patterns for grades 3–5';
+  }
+
+  /// Validate / normalize model JSON into words + clues.
+  @visibleForTesting
+  static ({List<String> words, List<String> clues}) parseCrosswordPuzzleResponse(
+    Map<String, dynamic> map, {
+    required int expected,
+  }) {
+    final raw = map['words'];
+    if (raw is! List) {
+      throw HttpException('AI response missing words list.');
+    }
+
+    final words = <String>[];
+    final clues = <String>[];
+    final seen = <String>{};
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final answer = '${item['answer'] ?? ''}'.trim().toUpperCase();
+      final clue = '${item['clue'] ?? ''}'.trim();
+      if (answer.length < 3 || answer.length > 8) continue;
+      if (!RegExp(r'^[A-Z]+$').hasMatch(answer)) continue;
+      if (clue.isEmpty) continue;
+      if (!seen.add(answer)) continue;
+      words.add(answer);
+      clues.add(clue);
+      if (words.length == expected) break;
+    }
+
+    if (words.length != expected) {
+      throw HttpException(
+          'AI returned ${words.length} usable words; expected $expected.');
+    }
+    return (words: words, clues: clues);
   }
 
   /// Fresh clue text for an existing crossword grid (answers stay the same).

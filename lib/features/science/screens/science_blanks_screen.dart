@@ -5,6 +5,7 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/common.dart';
 import '../logic/controllers.dart';
 import '../models/science_content.dart';
+import '../widgets/chemical_text.dart';
 import '../widgets/science_widgets.dart';
 
 /// Fill-in-the-blank: type answers, then press Check to grade.
@@ -368,16 +369,20 @@ class _BlankCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text.rich(
-                  TextSpan(children: [
-                    TextSpan(text: item.before),
-                    TextSpan(
-                      text: '_______',
-                      style: TextStyle(
-                          color: accent, fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(text: item.after),
-                  ]),
-                  style: const TextStyle(fontSize: 16, height: 1.35),
+                  TextSpan(
+                    style: const TextStyle(fontSize: 16, height: 1.35),
+                    children: [
+                      ...chemicalSpans(
+                          item.before, const TextStyle(fontSize: 16, height: 1.35)),
+                      TextSpan(
+                        text: '_______',
+                        style: TextStyle(
+                            color: accent, fontWeight: FontWeight.bold),
+                      ),
+                      ...chemicalSpans(
+                          item.after, const TextStyle(fontSize: 16, height: 1.35)),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -491,7 +496,7 @@ class _BlankCard extends StatelessWidget {
                 color: AppColors.yellow.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(item.hint,
+              child: ChemicalText(item.hint,
                   style: const TextStyle(fontSize: 13.5)),
             ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../theme/app_theme.dart';
 import '../models/science_content.dart';
+import 'chemical_text.dart';
 
 /// A diagram shown as a tappable card. Tapping opens a full-screen viewer with
 /// pinch-to-zoom, because the labels in these figures are small on a phone.
@@ -186,8 +187,9 @@ class _PassageCardState extends State<PassageCard> {
               style: const TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
             ),
             const SizedBox(height: 12),
-            SelectableText(
+            ChemicalText(
               a.passageText ?? '',
+              selectable: true,
               style: const TextStyle(
                   fontSize: 15.5, height: 1.5, color: AppColors.ink),
             ),
@@ -257,8 +259,8 @@ class _WordBankStripState extends State<WordBankStrip> {
                       border: Border.all(
                           color: widget.accent.withValues(alpha: 0.35)),
                     ),
-                    child: Text(word,
-                        style: TextStyle(
+                    child: ChemicalText(word,
+                        style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: AppColors.ink)),
