@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/physics/bernoulli/screens/bernoulli_home_screen.dart';
 import '../features/science/data/biology_topics.dart';
 import '../features/science/screens/topic_home_screen.dart';
 import '../services/openai_service.dart';
@@ -17,7 +18,8 @@ class ScienceHubScreen extends StatelessWidget {
       badge: 'Explore & Discover',
       heading: 'Science',
       highlight: 'Lab',
-      tagline: 'Explore biology, physics, and chemistry through reading and quizzes',
+      tagline:
+          'Explore biology, physics, and chemistry through reading and quizzes',
       heroImage: 'assets/sec_science.png',
       accent: const Color(0xFF00897B),
       cards: [
@@ -31,16 +33,11 @@ class ScienceHubScreen extends StatelessWidget {
         ),
         HubCardItem(
           title: 'Physics',
-          subtitle: 'Forces, energy, and motion — coming soon',
+          subtitle: "Bernoulli's principle and fluid motion",
           icon: Icons.bolt_rounded,
           color: const Color(0xFF5C6BC0),
           image: 'assets/sec_physics.png',
-          builder: (_) => const SubjectComingSoonScreen(
-            subject: 'Physics',
-            tagline: 'Explore forces, energy, and motion',
-            heroImage: 'assets/sec_physics.png',
-            accent: Color(0xFF5C6BC0),
-          ),
+          builder: (_) => const PhysicsHubScreen(),
         ),
         HubCardItem(
           title: 'Chemistry',
@@ -86,6 +83,36 @@ class BiologyHubScreen extends StatelessWidget {
             image: topic.heroImage,
             builder: (_) => TopicHomeScreen(topic: topic, openAI: openAI),
           ),
+      ],
+    );
+  }
+}
+
+/// Physics catalog — interactive labs and quizzes.
+class PhysicsHubScreen extends StatelessWidget {
+  const PhysicsHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionHubScreen(
+      badge: 'Forces & Fluids',
+      heading: 'Physics',
+      highlight: 'Lab',
+      tagline:
+          'Explore motion, pressure, and energy with interactive experiments',
+      heroImage: 'assets/sec_physics.png',
+      accent: const Color(0xFF5C6BC0),
+      showHero: false,
+      cards: [
+        HubCardItem(
+          title: "Bernoulli's Principle",
+          subtitle:
+              'Watch pressure drop in a Venturi tube, then quiz yourself',
+          icon: Icons.water_drop_rounded,
+          color: const Color(0xFF5C6BC0),
+          image: 'assets/sec_physics.png',
+          builder: (_) => const BernoulliHomeScreen(),
+        ),
       ],
     );
   }
