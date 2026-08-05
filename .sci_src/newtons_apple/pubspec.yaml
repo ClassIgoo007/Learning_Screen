@@ -1,0 +1,23 @@
+name: newtons_apple
+description: >-
+  An animated, production-ready Flutter scene: an apple falls from the tree and
+  the law of universal gravitation reveals itself to Newton.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"  # Flutter 3.27 or newer
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  # No image assets: every element of the scene is drawn at runtime with
+  # CustomPainter, so the app is resolution independent and ships at ~0 asset weight.

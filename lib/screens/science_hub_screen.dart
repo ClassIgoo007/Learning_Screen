@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../features/physics/bernoulli/screens/bernoulli_home_screen.dart';
+import '../features/physics/newtons_apple/screens/newton_scene_screen.dart';
 import '../features/science/data/biology_topics.dart';
 import '../features/science/screens/topic_home_screen.dart';
 import '../services/openai_service.dart';
@@ -33,7 +34,7 @@ class ScienceHubScreen extends StatelessWidget {
         ),
         HubCardItem(
           title: 'Physics',
-          subtitle: "Bernoulli's principle and fluid motion",
+          subtitle: "Bernoulli, Newton's apple, and fluid motion",
           icon: Icons.bolt_rounded,
           color: const Color(0xFF5C6BC0),
           image: 'assets/sec_physics.png',
@@ -95,23 +96,32 @@ class PhysicsHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionHubScreen(
-      badge: 'Forces & Fluids',
+      badge: 'Forces & Motion',
       heading: 'Physics',
       highlight: 'Lab',
       tagline:
-          'Explore motion, pressure, and energy with interactive experiments',
+          'Explore motion, pressure, gravity, and energy with interactive labs',
       heroImage: 'assets/sec_physics.png',
       accent: const Color(0xFF5C6BC0),
       showHero: false,
       cards: [
+        
         HubCardItem(
           title: "Bernoulli's Principle",
-          subtitle:
-              'Watch pressure drop in a Venturi tube, then quiz yourself',
+          subtitle: 'Watch pressure drop in a Venturi tube, then quiz yourself',
           icon: Icons.water_drop_rounded,
           color: const Color(0xFF5C6BC0),
           image: 'assets/sec_physics.png',
           builder: (_) => const BernoulliHomeScreen(),
+        ),
+        HubCardItem(
+          title: "Newton's Apple",
+          subtitle:
+              'Watch gravity pull an apple down and reveal F = G m₁m₂ / r²',
+          icon: Icons.park_rounded,
+          color: const Color(0xFF43A047),
+          image: 'assets/newtons_apple_preview.png',
+          builder: (_) => const NewtonSceneScreen(),
         ),
       ],
     );
