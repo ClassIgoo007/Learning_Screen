@@ -105,7 +105,6 @@ class PhysicsHubScreen extends StatelessWidget {
       accent: const Color(0xFF5C6BC0),
       showHero: false,
       cards: [
-        
         HubCardItem(
           title: "Bernoulli's Principle",
           subtitle: 'Watch pressure drop in a Venturi tube, then quiz yourself',
