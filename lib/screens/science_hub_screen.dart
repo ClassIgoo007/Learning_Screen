@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../features/physics/bernoulli/screens/bernoulli_home_screen.dart';
+import '../features/physics/cloud_formation/screens/cloud_formation_shell.dart';
 import '../features/physics/newtons_apple/screens/newton_scene_screen.dart';
 import '../features/science/data/biology_topics.dart';
 import '../features/science/screens/topic_home_screen.dart';
@@ -34,7 +35,7 @@ class ScienceHubScreen extends StatelessWidget {
         ),
         HubCardItem(
           title: 'Physics',
-          subtitle: "Bernoulli, Newton's apple, and fluid motion",
+          subtitle: 'Bernoulli, Newton, cloud formation, and more',
           icon: Icons.bolt_rounded,
           color: const Color(0xFF5C6BC0),
           image: 'assets/sec_physics.png',
@@ -100,7 +101,7 @@ class PhysicsHubScreen extends StatelessWidget {
       heading: 'Physics',
       highlight: 'Lab',
       tagline:
-          'Explore motion, pressure, gravity, and energy with interactive labs',
+          'Explore motion, pressure, gravity, and weather with interactive labs',
       heroImage: 'assets/sec_physics.png',
       accent: const Color(0xFF5C6BC0),
       showHero: false,
@@ -121,6 +122,15 @@ class PhysicsHubScreen extends StatelessWidget {
           color: const Color(0xFF43A047),
           image: 'assets/newtons_apple_preview.png',
           builder: (_) => const NewtonSceneScreen(),
+        ),
+        HubCardItem(
+          title: 'Cloud Formation',
+          subtitle:
+              'Animate rain in a cumulonimbus cloud, then answer questions',
+          icon: Icons.cloud_rounded,
+          color: const Color(0xFF0288D1),
+          image: 'assets/cloud_formation_preview.png',
+          builder: (_) => const CloudFormationShell(),
         ),
       ],
     );
