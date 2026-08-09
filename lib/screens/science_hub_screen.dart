@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../features/physics/bernoulli/screens/bernoulli_home_screen.dart';
 import '../features/physics/cloud_formation/screens/cloud_formation_shell.dart';
+import '../features/physics/kinetic_theory/screens/kinetic_theory_shell.dart';
 import '../features/physics/newtons_apple/screens/newton_scene_screen.dart';
 import '../features/science/data/biology_topics.dart';
 import '../features/science/screens/topic_home_screen.dart';
 import '../services/openai_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/section_hub.dart';
 
 /// Top-level Science hub with Biology, Physics, and Chemistry branches.
@@ -131,6 +133,15 @@ class PhysicsHubScreen extends StatelessWidget {
           color: const Color(0xFF0288D1),
           image: 'assets/cloud_formation_preview.png',
           builder: (_) => const CloudFormationShell(),
+        ),
+        HubCardItem(
+          title: 'Kinetic Theory of Gases',
+          subtitle:
+              'Watch molecules bombard the walls of a vessel, then answer questions',
+          icon: Icons.scatter_plot_rounded,
+          color: AppColors.violet,
+          image: 'assets/kinetic_theory_thumbnail.png',
+          builder: (_) => const KineticTheoryShell(),
         ),
       ],
     );
