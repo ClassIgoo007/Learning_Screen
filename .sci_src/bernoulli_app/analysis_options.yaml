@@ -1,0 +1,35 @@
+# Static analysis for a production build.
+# Run `flutter analyze` before pushing; CI runs it too.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    # Refuse implicit downcasts from dynamic: those become runtime crashes
+    # instead of compile errors.
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    todo: ignore
+    deprecated_member_use: warning
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # Correctness and safety.
+    - avoid_empty_else
+    - avoid_print
+    - avoid_slow_async_io
+    - cancel_subscriptions
+    - close_sinks
+    - unawaited_futures
+    - unnecessary_await_in_return
+    # Readability.
+    - always_declare_return_types
+    - directives_ordering
+    - prefer_final_locals
+    - sort_child_properties_last
+    - use_super_parameters
+    # Deliberately not enabled: require_trailing_commas and the other purely
+    # cosmetic rules. Run `dart format .` and let the formatter own layout.

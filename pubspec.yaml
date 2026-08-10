@@ -9,10 +9,43 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_tts: ^4.2.5
   http: ^1.2.0
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/mascot_welcome.png
+    - assets/hero_results.png
+    - assets/cat_birds.png
+    - assets/home_hero.png
+    - assets/celebration.png
+    - assets/astronaut.png
+    - assets/longi_hero.png
+    - assets/longu_hero.png
+    - assets/oioy_hero.png
+    - assets/sec_phonics.png
+    - assets/sec_crosswords.png
+    - assets/sec_activities.png
+    - assets/sec_science.png
+    - assets/sec_biology.png
+    - assets/sec_physics.png
+    - assets/sec_chemistry.png
+    - assets/dna_structure.jpg
+    - assets/chromosomes.jpg
+    - assets/photosynthesis_diagram.jpg
+    - assets/dna_diagram.jpg
+    - assets/glucose.png
+    - assets/amino_acid.png
+    - assets/genetic_code.png
+    - assets/genetic_dna_structure.png
+    - assets/animal_cell.png
+    - assets/cell_types.png
+    - assets/newtons_apple_preview.png
+    - assets/cloud_formation_preview.png
+    - assets/kinetic_theory_thumbnail.png
