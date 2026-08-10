@@ -26,6 +26,7 @@ class AppColors {
   static const Color redSoft = Color(0xFFFDECEA);
   static const Color blueSoft = Color(0xFFE7F3FE);
   static const Color violetSoft = Color(0xFFF5E9FA);
+  static const Color yellowSoft = Color(0xFFFFF6DC);
 
   static const LinearGradient skyGradient = LinearGradient(
     begin: Alignment.topCenter,

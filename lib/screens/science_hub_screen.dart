@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../features/physics/bernoulli/screens/bernoulli_home_screen.dart';
 import '../features/physics/cloud_formation/screens/cloud_formation_shell.dart';
+import '../features/physics/heat_and_temperature/screens/heat_and_temperature_shell.dart';
 import '../features/physics/kinetic_theory/screens/kinetic_theory_shell.dart';
 import '../features/physics/newtons_apple/screens/newton_scene_screen.dart';
 import '../features/science/data/biology_topics.dart';
@@ -142,6 +143,15 @@ class PhysicsHubScreen extends StatelessWidget {
           color: AppColors.violet,
           image: 'assets/kinetic_theory_thumbnail.png',
           builder: (_) => const KineticTheoryShell(),
+        ),
+        HubCardItem(
+          title: 'Heat and Temperature',
+          subtitle:
+              'Watch a plasma jet and a cryogenic cycle, then answer questions',
+          icon: Icons.thermostat_rounded,
+          color: AppColors.yellow,
+          image: 'assets/sec_physics.png',
+          builder: (_) => const HeatAndTemperatureShell(),
         ),
       ],
     );
