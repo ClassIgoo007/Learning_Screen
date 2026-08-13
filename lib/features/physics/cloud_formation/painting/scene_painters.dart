@@ -93,7 +93,7 @@ class CloudPainter extends CustomPainter {
           width: p.rx * 2,
           height: p.ry * 2,
         ),
-        Paint()..color = _shades[p.shade].withOpacity(o),
+        Paint()..color = _shades[p.shade].withValues(alpha: o),
       );
     }
 
@@ -107,7 +107,7 @@ class CloudPainter extends CustomPainter {
       canvas.drawOval(
         Rect.fromCenter(
             center: p.center, width: p.rx * 2, height: p.ry * 2),
-        Paint()..color = SceneColors.cloudDark.withOpacity(o),
+        Paint()..color = SceneColors.cloudDark.withValues(alpha: o),
       );
     }
     canvas.drawRRect(
@@ -115,12 +115,12 @@ class CloudPainter extends CustomPainter {
         const Rect.fromLTRB(268, 336, 742, 420),
         const Radius.circular(38),
       ),
-      Paint()..color = SceneColors.cloudDark.withOpacity(o),
+      Paint()..color = SceneColors.cloudDark.withValues(alpha: o),
     );
 
     if (state.condensationOpacity > 0.001) {
       final drop = Paint()
-        ..color = SceneColors.droplet.withOpacity(state.condensationOpacity);
+        ..color = SceneColors.droplet.withValues(alpha: state.condensationOpacity);
       for (var i = 0; i < SceneMetrics.condensation.length; i++) {
         final c = SceneMetrics.condensation[i];
         final wobble = math.sin((state.t * 2 * math.pi) + i) * 3;
@@ -149,7 +149,7 @@ class CurrentsPainter extends CustomPainter {
         ..cubicTo(c.c1.dx, c.c1.dy, c.c2.dx, c.c2.dy, c.end.dx, c.end.dy);
 
       final paint = Paint()
-        ..color = SceneColors.current.withOpacity(c.opacity)
+        ..color = SceneColors.current.withValues(alpha: c.opacity)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round;
@@ -224,14 +224,14 @@ class RainPainter extends CustomPainter {
           .clamp(0.0, 1.0);
       final y = _from + p * _distance;
       paint.color =
-          SceneColors.rain.withOpacity(fade * state.rainOpacity * 0.95);
+          SceneColors.rain.withValues(alpha: fade * state.rainOpacity * 0.95);
       canvas.drawLine(Offset(d.x, y), Offset(d.x, y + 20), paint);
     }
 
     _drawLabel(canvas, 'Rain drops',
         anchor: const Offset(716, 500),
         target: const Offset(788, 470),
-        color: labelColor.withOpacity(state.rainOpacity));
+        color: labelColor.withValues(alpha: state.rainOpacity));
   }
 
   @override
@@ -248,7 +248,7 @@ void _drawLabel(
   required Color color,
 }) {
   final leader = Paint()
-    ..color = color.withOpacity(color.opacity * 0.5)
+    ..color = color.withValues(alpha: color.a * 0.5)
     ..strokeWidth = 1.2;
   const dash = 7.0;
   final delta = target - anchor;

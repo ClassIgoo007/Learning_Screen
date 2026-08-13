@@ -144,13 +144,13 @@ class _Equation extends StatelessWidget {
             ),
             Opacity(
               opacity: denominatorOpacity,
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Text('r', style: _base),
+                  Text('r', style: _base),
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: EdgeInsets.only(top: 4),
                     child: Text('2', style: _sub),
                   ),
                 ],

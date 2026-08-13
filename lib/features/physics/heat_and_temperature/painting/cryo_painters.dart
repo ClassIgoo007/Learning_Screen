@@ -40,14 +40,14 @@ class CryogenicPainter extends CustomPainter {
         const Rect.fromLTRB(300, 104, 720, 376),
         const Radius.circular(18),
       ),
-      Paint()..color = _hot.withOpacity(0.06 + 0.06 * state.heatOutStrength),
+      Paint()..color = _hot.withValues(alpha: 0.06 + 0.06 * state.heatOutStrength),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTRB(300, 566, 720, 846),
         const Radius.circular(18),
       ),
-      Paint()..color = _cold.withOpacity(0.06 + 0.06 * state.heatInStrength),
+      Paint()..color = _cold.withValues(alpha: 0.06 + 0.06 * state.heatInStrength),
     );
   }
 
@@ -77,7 +77,7 @@ class CryogenicPainter extends CustomPainter {
     void flow(Path path, double opacity, double speed) {
       if (opacity <= 0.01) return;
       final paint = Paint()
-        ..color = _gas.withOpacity(opacity)
+        ..color = _gas.withValues(alpha: opacity)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 5
         ..strokeCap = StrokeCap.round;
@@ -100,7 +100,7 @@ class CryogenicPainter extends CustomPainter {
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(r, const Radius.circular(14)),
-        Paint()..color = tint.withOpacity(0.12),
+        Paint()..color = tint.withValues(alpha: 0.12),
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(r, const Radius.circular(14)),
@@ -113,7 +113,7 @@ class CryogenicPainter extends CustomPainter {
       // Speckled gas: the fraction of dots shown is the density of the gas,
       // which is the whole point of the figure.
       final shown = (CryoMetrics.speckles.length * fill).round();
-      final dot = Paint()..color = _gas.withOpacity(0.85);
+      final dot = Paint()..color = _gas.withValues(alpha: 0.85);
       for (var i = 0; i < shown; i++) {
         final s = CryoMetrics.speckles[i];
         final jitter = math.sin(state.t * 2 * math.pi + i) * 3;
@@ -138,18 +138,17 @@ class CryogenicPainter extends CustomPainter {
 
     // Electric motor: a drum on a plinth, with its cable.
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          CryoMetrics.motorBody, const Radius.circular(10)),
+      RRect.fromRectAndRadius(CryoMetrics.motorBody, const Radius.circular(10)),
       body,
     );
     for (var i = 1; i < 5; i++) {
-      final x = CryoMetrics.motorBody.left +
-          CryoMetrics.motorBody.width * i / 5;
+      final x =
+          CryoMetrics.motorBody.left + CryoMetrics.motorBody.width * i / 5;
       canvas.drawLine(
         Offset(x, CryoMetrics.motorBody.top + 12),
         Offset(x, CryoMetrics.motorBody.bottom - 12),
         Paint()
-          ..color = Palette.paper.withOpacity(0.5)
+          ..color = Palette.paper.withValues(alpha: 0.5)
           ..strokeWidth = 3,
       );
     }
@@ -168,14 +167,18 @@ class CryogenicPainter extends CustomPainter {
     // Shaft from the motor to the compressor, and the compressor itself,
     // hatched the way the figure hatches it.
     canvas.drawRect(const Rect.fromLTRB(190, 476, 236, 494), body);
-    final c = CryoMetrics.compressorBody;
-    canvas.drawRect(c, Paint()..color = _metal.withOpacity(0.25));
+    const c = CryoMetrics.compressorBody;
+    canvas.drawRect(c, Paint()..color = _metal.withValues(alpha: 0.25));
     canvas.drawRect(c, line);
     canvas.save();
     canvas.clipRect(c);
     for (var x = c.left - c.height; x < c.right; x += 16) {
-      canvas.drawLine(Offset(x, c.bottom), Offset(x + c.height, c.top),
-          Paint()..color = _outline.withOpacity(0.5)..strokeWidth = 2);
+      canvas.drawLine(
+          Offset(x, c.bottom),
+          Offset(x + c.height, c.top),
+          Paint()
+            ..color = _outline.withValues(alpha: 0.5)
+            ..strokeWidth = 2);
     }
     canvas.restore();
 
@@ -233,7 +236,7 @@ class CryogenicPainter extends CustomPainter {
     void wavy(HeatArrow a, Color colour, double strength, bool outward) {
       if (strength <= 0.02) return;
       final paint = Paint()
-        ..color = colour.withOpacity(strength)
+        ..color = colour.withValues(alpha: strength)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round
@@ -244,14 +247,11 @@ class CryogenicPainter extends CustomPainter {
       // head ends up pointing the way the heat is going.
       final sign = a.direction.toDouble();
       const length = 62.0;
-      final origin = outward
-          ? a.at
-          : a.at.translate(0, -sign * (length + 12));
+      final origin = outward ? a.at : a.at.translate(0, -sign * (length + 12));
 
       final path = Path()..moveTo(origin.dx, origin.dy);
       for (var i = 0.0; i <= length; i += 4) {
-        final wobble =
-            math.sin((i / 13) - state.heatPhase * 2 * math.pi) * 5.5;
+        final wobble = math.sin((i / 13) - state.heatPhase * 2 * math.pi) * 5.5;
         path.lineTo(origin.dx + wobble, origin.dy + sign * i);
       }
       canvas.drawPath(path, paint);

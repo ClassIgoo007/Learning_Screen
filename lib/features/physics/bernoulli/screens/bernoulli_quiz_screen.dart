@@ -32,7 +32,8 @@ class _BernoulliQuizScreenState extends State<BernoulliQuizScreen> {
     _controller.select(question, option);
     final correct = _controller.isCorrect(question);
     final q = _controller.questions[question];
-    unawaited(SemanticsService.announce(
+    unawaited(SemanticsService.sendAnnouncement(
+      View.of(context),
       correct
           ? 'Correct. ${q.explanation}'
           : 'Not quite. The answer is ${q.answer}. ${q.explanation}',

@@ -177,10 +177,10 @@ class _ClozeCard extends StatelessWidget {
     final border = !checked
         ? Palette.hairline
         : correct
-            ? Palette.correct.withOpacity(0.5)
-            : Palette.wrong.withOpacity(0.5);
+            ? Palette.correct.withValues(alpha: 0.5)
+            : Palette.wrong.withValues(alpha: 0.5);
 
-    final sentenceStyle = const TextStyle(
+    const sentenceStyle = TextStyle(
       fontSize: 15.5,
       height: 1.9,
       color: Palette.ink,
@@ -348,7 +348,7 @@ class _BlankField extends StatelessWidget {
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 6),
           enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: color.withOpacity(0.5), width: 1.4),
+            borderSide: BorderSide(color: color.withValues(alpha: 0.5), width: 1.4),
           ),
           disabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: color, width: 1.4),

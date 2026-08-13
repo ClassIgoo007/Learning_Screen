@@ -125,8 +125,8 @@ class _QuestionCard extends StatelessWidget {
           color: !checked
               ? Palette.hairline
               : correct
-                  ? Palette.correct.withOpacity(0.5)
-                  : Palette.wrong.withOpacity(0.5),
+                  ? Palette.correct.withValues(alpha: 0.5)
+                  : Palette.wrong.withValues(alpha: 0.5),
         ),
       ),
       child: Column(

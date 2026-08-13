@@ -119,10 +119,10 @@ class _AnimationScreenState extends State<AnimationScreen>
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    const Text(
                       'Fig. 17-11 — the formation of rain in a cumulonimbus '
                       'cloud',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontStyle: FontStyle.italic,
                         color: Palette.inkSoft,

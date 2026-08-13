@@ -317,7 +317,7 @@ class _SpanBar extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(top: 3),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.35),
+                    color: accent.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

@@ -66,7 +66,7 @@ class PlasmaPainter extends CustomPainter {
           Rect.fromLTWH(x, 224, 14, 172),
           const Radius.circular(5),
         ),
-        Paint()..color = _metal.withOpacity(0.75),
+        Paint()..color = _metal.withValues(alpha: 0.75),
       );
     }
 
@@ -123,7 +123,7 @@ class PlasmaPainter extends CustomPainter {
     }
 
     final glow = Paint()
-      ..color = _core.withOpacity(0.55 * state.flicker)
+      ..color = _core.withValues(alpha: 0.55 * state.flicker)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 11
       ..strokeCap = StrokeCap.round
@@ -133,7 +133,7 @@ class PlasmaPainter extends CustomPainter {
       path,
       Paint()
         ..color = Color.lerp(_flame, _core, state.intensity)!
-            .withOpacity(state.flicker)
+            .withValues(alpha: state.flicker)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.5
         ..strokeCap = StrokeCap.round,
@@ -143,7 +143,7 @@ class PlasmaPainter extends CustomPainter {
   /// The plume: a soft cone plus individual streaks of ionised gas, each
   /// fading as it travels and cools.
   void _paintJet(Canvas canvas) {
-    final start = PlasmaMetrics.jetStart;
+    const start = PlasmaMetrics.jetStart;
     final span = (PlasmaMetrics.jetEnd.dx - start.dx) * state.reach;
 
     // The cone, brightest at the throat.
@@ -159,9 +159,9 @@ class PlasmaPainter extends CustomPainter {
       Paint()
         ..shader = LinearGradient(
           colors: [
-            _core.withOpacity(0.95),
-            _flame.withOpacity(0.55),
-            _hot.withOpacity(0.0),
+            _core.withValues(alpha: 0.95),
+            _flame.withValues(alpha: 0.55),
+            _hot.withValues(alpha: 0.0),
           ],
           stops: const [0.0, 0.45, 1.0],
         ).createShader(
@@ -180,7 +180,7 @@ class PlasmaPainter extends CustomPainter {
         Offset(x + 26 + 14 * s.speed, y),
         Paint()
           ..color = Color.lerp(_core, _hot, u)!
-              .withOpacity(fade * (0.45 + 0.55 * state.intensity))
+              .withValues(alpha: fade * (0.45 + 0.55 * state.intensity))
           ..strokeWidth = 3
           ..strokeCap = StrokeCap.round,
       );
@@ -204,7 +204,7 @@ class PlasmaPainter extends CustomPainter {
         const Rect.fromLTRB(left, y, right, y + 16),
         const Radius.circular(8),
       ),
-      Paint()..color = _outline.withOpacity(0.12),
+      Paint()..color = _outline.withValues(alpha: 0.12),
     );
 
     final fillTo = xFor(state.temperature);
@@ -225,7 +225,7 @@ class PlasmaPainter extends CustomPainter {
         Offset(x, y - 12),
         Offset(x, y + 28),
         Paint()
-          ..color = labelColor.withOpacity(0.55)
+          ..color = labelColor.withValues(alpha: 0.55)
           ..strokeWidth = 1.4,
       );
       paintLabel(canvas, '${_thousands(mark.celsius)}°C\n${mark.label}',

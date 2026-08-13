@@ -40,7 +40,7 @@ class VesselPainter extends CustomPainter {
       ..strokeWidth = 3
       ..strokeJoin = StrokeJoin.round;
     final hidden = Paint()
-      ..color = _edge.withOpacity(0.55)
+      ..color = _edge.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -53,8 +53,13 @@ class VesselPainter extends CustomPainter {
       [Offset(r, b), Offset(r + d.dx, b + d.dy)],
     ]) {
       canvas.drawPath(
-        dashPath(Path()..moveTo(corner[0].dx, corner[0].dy)..lineTo(
-            corner[1].dx, corner[1].dy), 12, 9, 0),
+        dashPath(
+            Path()
+              ..moveTo(corner[0].dx, corner[0].dy)
+              ..lineTo(corner[1].dx, corner[1].dy),
+            12,
+            9,
+            0),
         hidden,
       );
     }
@@ -66,18 +71,18 @@ class VesselPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTRB(l, t, r, b), solid);
     canvas.drawRect(
       Rect.fromLTRB(l, t, r, b),
-      Paint()..color = _edge.withOpacity(0.05),
+      Paint()..color = _edge.withValues(alpha: 0.05),
     );
 
     // The arrow that marks the wall being driven inward.
     if (state.compression > 0.01) {
       final arrow = Paint()
-        ..color = _impact.withOpacity(state.compression)
+        ..color = _impact.withValues(alpha: state.compression)
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
-      final y = (t + b) / 2;
+      const y = (t + b) / 2;
       canvas.drawLine(Offset(r + 96, y), Offset(r + 26, y), arrow);
       canvas.drawPath(
         Path()
@@ -93,7 +98,7 @@ class VesselPainter extends CustomPainter {
   /// landing on it can be counted by eye.
   void _paintAreaA(Canvas canvas) {
     const a = VesselMetrics.areaA;
-    canvas.drawRect(a, Paint()..color = _impact.withOpacity(0.22));
+    canvas.drawRect(a, Paint()..color = _impact.withValues(alpha: 0.22));
     canvas.drawRect(
       a,
       Paint()
@@ -108,7 +113,7 @@ class VesselPainter extends CustomPainter {
   void _paintMolecules(Canvas canvas) {
     final dot = Paint()..color = _molecule;
     final tail = Paint()
-      ..color = _molecule.withOpacity(0.7)
+      ..color = _molecule.withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round
@@ -163,13 +168,13 @@ class VesselPainter extends CustomPainter {
         0,
       ),
       Paint()
-        ..color = _impact.withOpacity(0.5)
+        ..color = _impact.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.3,
     );
 
     final ray = Paint()
-      ..color = _impact.withOpacity(0.85)
+      ..color = _impact.withValues(alpha: 0.85)
       ..strokeWidth = 2.5 + 1.5 * force
       ..strokeCap = StrokeCap.round;
     for (var i = 0; i < rayCount; i++) {
@@ -185,7 +190,7 @@ class VesselPainter extends CustomPainter {
     const x = 900.0;
     const top = 240.0;
     const height = 300.0;
-    final track = Paint()..color = _edge.withOpacity(0.15);
+    final track = Paint()..color = _edge.withValues(alpha: 0.15);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         const Rect.fromLTWH(x, top, 26, height),
@@ -250,7 +255,7 @@ class ApparatusPainter extends CustomPainter {
     // The gap between the two glass plates, seen edge on.
     canvas.drawRect(
       const Rect.fromLTRB(l, t, r, f),
-      Paint()..color = _glass.withOpacity(0.13),
+      Paint()..color = _glass.withValues(alpha: 0.13),
     );
     final rail = Paint()
       ..color = _frame
@@ -272,7 +277,7 @@ class ApparatusPainter extends CustomPainter {
   void _paintBalls(Canvas canvas) {
     final fill = Paint()..color = _ball;
     final rim = Paint()
-      ..color = _ball.withOpacity(0.55)
+      ..color = _ball.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     for (final b in ApparatusMetrics.balls) {
@@ -295,11 +300,11 @@ class ApparatusPainter extends CustomPainter {
       ),
       paint,
     );
-    canvas.drawRect(Rect.fromLTWH(492, ApparatusMetrics.boxTop - 40, 16, y - 56),
-        paint);
+    canvas.drawRect(
+        Rect.fromLTWH(492, ApparatusMetrics.boxTop - 40, 16, y - 56), paint);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(430, ApparatusMetrics.boxTop - 54, 140, 18),
+        const Rect.fromLTWH(430, ApparatusMetrics.boxTop - 54, 140, 18),
         const Radius.circular(6),
       ),
       paint,
@@ -343,7 +348,7 @@ class ApparatusPainter extends CustomPainter {
       canvas.rotate(a);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(-9, -r - 17, 18, 22),
+          const Rect.fromLTWH(-9, -r - 17, 18, 22),
           const Radius.circular(3),
         ),
         paint,
@@ -358,7 +363,7 @@ class ApparatusPainter extends CustomPainter {
   void _paintLabels(Canvas canvas) {
     void tag(String text, Offset anchor, Offset target) {
       final leader = Paint()
-        ..color = labelColor.withOpacity(0.5)
+        ..color = labelColor.withValues(alpha: 0.5)
         ..strokeWidth = 1.2;
       canvas.drawLine(anchor, target, leader);
       canvas.drawCircle(anchor, 3.5, Paint()..color = labelColor);
@@ -366,11 +371,13 @@ class ApparatusPainter extends CustomPainter {
           color: labelColor, fontSize: 20, maxWidth: 230);
     }
 
-    tag('Movable piston', Offset(ApparatusMetrics.boxRight - 60,
-        state.pistonY + 10), const Offset(748, 200));
+    tag(
+        'Movable piston',
+        Offset(ApparatusMetrics.boxRight - 60, state.pistonY + 10),
+        const Offset(748, 200));
     tag('Ping-pong balls', const Offset(360, 600), const Offset(96, 560));
-    tag('Cogwheel driven by a motor',
-        const Offset(452, 700), const Offset(96, 700));
+    tag('Cogwheel driven by a motor', const Offset(452, 700),
+        const Offset(96, 700));
     paintLabel(canvas, 'Two glass plates,\njust far enough apart',
         const Offset(48, 120),
         color: labelColor, fontSize: 20, maxWidth: 220);

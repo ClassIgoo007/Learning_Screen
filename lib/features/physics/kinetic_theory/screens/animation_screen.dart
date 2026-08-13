@@ -32,6 +32,7 @@ class _AnimationScreenState extends State<AnimationScreen>
   late final AnimationController _agitation;
 
   bool _running = true;
+  bool? _lastReduceMotion;
 
   KineticStage get _stage => widget.stage.value;
 
@@ -96,7 +97,16 @@ class _AnimationScreenState extends State<AnimationScreen>
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    if (reduceMotion && _clock.isAnimating) _clock.stop();
+    if (reduceMotion != _lastReduceMotion) {
+      _lastReduceMotion = reduceMotion;
+      // The clock must resume the moment reduced motion is no longer
+      // requested — molecules keep travelling in every beat, always.
+      if (reduceMotion) {
+        _clock.stop();
+      } else if (_running) {
+        _clock.repeat();
+      }
+    }
 
     final vessel = _stage.isVessel;
     final beats =
