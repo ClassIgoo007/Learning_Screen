@@ -12,6 +12,7 @@ class AppColors {
   static const Color greenDark = Color(0xFF2F9E44);
   static const Color yellow = Color(0xFFFFC93C);
   static const Color red = Color(0xFFE9584B);
+  static const Color violet = Color(0xFFAB47BC); // lesson-accent brand color
 
   static const Color skyTop = Color(0xFFCDEBFF); // light sky
   static const Color skyBottom = Color(0xFFF3FAFF); // near white
@@ -24,6 +25,8 @@ class AppColors {
   static const Color greenSoft = Color(0xFFE9F8ED);
   static const Color redSoft = Color(0xFFFDECEA);
   static const Color blueSoft = Color(0xFFE7F3FE);
+  static const Color violetSoft = Color(0xFFF5E9FA);
+  static const Color yellowSoft = Color(0xFFFFF6DC);
 
   static const LinearGradient skyGradient = LinearGradient(
     begin: Alignment.topCenter,

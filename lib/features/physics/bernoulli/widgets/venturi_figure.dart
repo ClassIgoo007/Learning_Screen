@@ -124,7 +124,7 @@ class _VenturiFigureState extends State<VenturiFigure>
   void _seedParticles() {
     _particles.clear();
     const steps = 400;
-    final dx =
+    const dx =
         (VenturiGeometry.pipeRight - VenturiGeometry.pipeLeft) / steps;
     final xs = <double>[];
     final ts = <double>[];
@@ -274,7 +274,7 @@ class _VenturiPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFF81D4FA), Color(0xFF29B6F6)],
-        ).createShader(Rect.fromLTWH(
+        ).createShader(const Rect.fromLTWH(
             VenturiGeometry.pipeLeft,
             VenturiGeometry.centreY - 60,
             VenturiGeometry.pipeRight - VenturiGeometry.pipeLeft,
@@ -290,7 +290,7 @@ class _VenturiPainter extends CustomPainter {
 
     // dashed centreline, as in the original figure
     final dash = Paint()
-      ..color = pipeStroke.withOpacity(0.55)
+      ..color = pipeStroke.withValues(alpha: 0.55)
       ..strokeWidth = 1.6;
     for (var x = VenturiGeometry.pipeLeft - 30;
         x < VenturiGeometry.pipeRight + 30;
@@ -346,7 +346,7 @@ class _VenturiPainter extends CustomPainter {
   void _drawReferenceLine(Canvas canvas, List<double> h) {
     final y = VenturiGeometry.centreY - h[0] * VenturiGeometry.columnScale;
     final paint = Paint()
-      ..color = hi.withOpacity(0.75)
+      ..color = hi.withValues(alpha: 0.75)
       ..strokeWidth = 1.8;
     for (var x = 120.0; x < 800; x += 16) {
       canvas.drawLine(Offset(x, y), Offset(x + 8, y), paint);
@@ -370,7 +370,7 @@ class _VenturiPainter extends CustomPainter {
         Offset(p.x - len / 2, y),
         Offset(p.x + len / 2, y),
         Paint()
-          ..color = Colors.white.withOpacity(0.92)
+          ..color = Colors.white.withValues(alpha: 0.92)
           ..strokeWidth = 3.4
           ..strokeCap = StrokeCap.round,
       );
@@ -448,11 +448,11 @@ class _VenturiPainter extends CustomPainter {
           size: 16, align: TextAlign.center);
     }
 
-    _text(canvas, 'pressure here is LOWER', Offset(450, 84),
+    _text(canvas, 'pressure here is LOWER', const Offset(450, 84),
         size: 16, weight: FontWeight.bold, align: TextAlign.center, color: lo);
-    _text(canvas, 'water moves FASTER', Offset(450, 600),
+    _text(canvas, 'water moves FASTER', const Offset(450, 600),
         size: 15, align: TextAlign.center, color: lo);
-    _text(canvas, 'same level: equal pressure', Offset(838, 128),
+    _text(canvas, 'same level: equal pressure', const Offset(838, 128),
         size: 13, align: TextAlign.right, color: hi);
   }
 
