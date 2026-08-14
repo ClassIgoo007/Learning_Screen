@@ -34,8 +34,10 @@ enum SceneStage {
   ),
   impact(
     'Impact',
-    'The ground brings the apple to rest in milliseconds. That large change of '
-        'momentum in a very short time is why the fruit squashes and rebounds.',
+    'Newton\u2019s head brings the apple to rest in milliseconds, not the '
+        'ground. That large change of momentum in so short a time is why the '
+        'fruit squashes on contact and gives him a gentle bump as it '
+        'rebounds.',
   ),
   realisation(
     'The real question',
@@ -90,7 +92,7 @@ class SceneState {
   /// Which beat of the story this frame belongs to.
   final SceneStage stage;
 
-  /// 0 = still on the branch, 1 = resting on the grass.
+  /// 0 = still on the branch, 1 = resting on Newton's head.
   final double appleDrop;
 
   /// Squash-and-stretch factors applied to the apple.
@@ -115,7 +117,7 @@ class SceneState {
   /// Staggered reveal of the four parts of the equation, 0..1.
   final double formulaReveal;
 
-  /// True once the apple has touched the grass.
+  /// True once the apple has touched Newton's head.
   bool get hasLanded => progress >= SceneTiming.fallEnd;
 
   /// Builds the frame for a playback position.

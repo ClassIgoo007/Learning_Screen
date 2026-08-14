@@ -7,11 +7,13 @@ import '../animation/scene_timeline.dart';
 import '../painting/apple_shape.dart';
 import '../theme/palette.dart';
 
-/// The apple that actually falls, plus its speed lines and the dust it kicks up.
+/// The apple that actually falls, plus its speed lines and the impact puff
+/// where it lands on Newton's head.
 ///
-/// It is positioned by [SceneMetrics.appleY] rather than by a widget animation,
-/// so its height at any moment is a pure function of the timeline — the same
-/// value the narration and the physics notes are derived from.
+/// It is positioned by [SceneMetrics.appleX] and [SceneMetrics.appleY] rather
+/// than by a widget animation, so its position at any moment is a pure
+/// function of the timeline — the same value the narration and the physics
+/// notes are derived from.
 class FallingApple extends StatelessWidget {
   const FallingApple({required this.state, super.key});
 
@@ -21,13 +23,14 @@ class FallingApple extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double x = SceneMetrics.appleX(state.appleDrop);
     final double y = SceneMetrics.appleY(state.appleDrop);
 
     return Stack(
       children: <Widget>[
         if (state.trailOpacity > 0.01)
           Positioned(
-            left: SceneMetrics.appleStart.dx - 70,
+            left: x - 70,
             top: y - 320,
             width: 140,
             height: 320,
@@ -50,7 +53,7 @@ class FallingApple extends StatelessWidget {
             ),
           ),
         Positioned(
-          left: SceneMetrics.appleStart.dx - _boxRadius,
+          left: x - _boxRadius,
           top: y - _boxRadius,
           width: _boxRadius * 2,
           height: _boxRadius * 2,
@@ -170,7 +173,7 @@ class _DustPainter extends CustomPainter {
       canvas.drawCircle(p, m[2] * (0.4 + 0.6 * fade), paint);
     }
 
-    // Ground ripple.
+    // Impact ripple.
     canvas.drawArc(
       Rect.fromCenter(
         center: origin,
