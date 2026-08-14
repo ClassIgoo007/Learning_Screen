@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../models/lesson.dart';
 import '../theme/palette.dart';
 import '../widgets/common.dart';
@@ -124,16 +125,19 @@ class _BlankScreenState extends State<BlankScreen> {
                       ),
                     ),
                     for (var i = 0; i < _items.length; i++) ...[
-                      _ClozeCard(
-                        index: i,
-                        item: _items[i],
-                        controller: _controllers[i],
-                        focusNode: _focusNodes[i],
-                        checked: _checked,
-                        onSubmitted: () => _advance(i),
-                        onChanged: () => setState(() {}),
+                      EntranceFade(
+                        delay: Duration(milliseconds: 40 * i),
+                        child: _ClozeCard(
+                          index: i,
+                          item: _items[i],
+                          controller: _controllers[i],
+                          focusNode: _focusNodes[i],
+                          checked: _checked,
+                          onSubmitted: () => _advance(i),
+                          onChanged: () => setState(() {}),
+                        ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                     ],
                   ],
                 ),
@@ -186,13 +190,10 @@ class _ClozeCard extends StatelessWidget {
       color: Palette.ink,
     );
 
-    return Container(
+    return ElevatedCard(
+      color: Palette.surface,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        color: Palette.surface,
-        borderRadius: BorderRadius.circular(Sizes.cardRadius),
-        border: Border.all(color: border),
-      ),
+      borderColor: border,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -282,15 +283,10 @@ class _ClozeCard extends StatelessWidget {
               ],
             ),
           ),
-          if (checked)
-            Padding(
-              padding: const EdgeInsets.only(left: 8, top: 6),
-              child: Icon(
-                correct ? Icons.check_circle : Icons.cancel,
-                size: 20,
-                color: correct ? Palette.correct : Palette.wrong,
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8, top: 6),
+            child: AnimatedFeedbackIcon(correct: correct, visible: checked),
+          ),
         ],
       ),
     );

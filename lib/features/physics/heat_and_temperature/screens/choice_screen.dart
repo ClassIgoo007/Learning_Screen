@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../models/lesson.dart';
 import '../theme/palette.dart';
 import '../widgets/common.dart';
@@ -71,17 +72,20 @@ class _ChoiceScreenState extends State<ChoiceScreen> {
                     ],
                     const SizedBox(height: 14),
                     for (var i = 0; i < _questions.length; i++) ...[
-                      _QuestionCard(
-                        index: i,
-                        question: _questions[i],
-                        selected: _selected[i],
-                        checked: _checked,
-                        onSelect: _checked
-                            ? null
-                            : (value) =>
-                                setState(() => _selected[i] = value),
+                      EntranceFade(
+                        delay: Duration(milliseconds: 40 * i),
+                        child: _QuestionCard(
+                          index: i,
+                          question: _questions[i],
+                          selected: _selected[i],
+                          checked: _checked,
+                          onSelect: _checked
+                              ? null
+                              : (value) =>
+                                  setState(() => _selected[i] = value),
+                        ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                     ],
                   ],
                 ),
@@ -119,19 +123,14 @@ class _QuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final correct = question.isCorrect(selected);
 
-    return Container(
+    return ElevatedCard(
+      color: Palette.surface,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        color: Palette.surface,
-        borderRadius: BorderRadius.circular(Sizes.cardRadius),
-        border: Border.all(
-          color: !checked
-              ? Palette.hairline
-              : correct
-                  ? Palette.correct.withValues(alpha: 0.5)
-                  : Palette.wrong.withValues(alpha: 0.5),
-        ),
-      ),
+      borderColor: !checked
+          ? Palette.hairline
+          : correct
+              ? Palette.correct.withValues(alpha: 0.5)
+              : Palette.wrong.withValues(alpha: 0.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -158,15 +157,10 @@ class _QuestionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (checked)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8, top: 2),
-                  child: Icon(
-                    correct ? Icons.check_circle : Icons.cancel,
-                    size: 20,
-                    color: correct ? Palette.correct : Palette.wrong,
-                  ),
-                ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8, top: 2),
+                child: AnimatedFeedbackIcon(correct: correct, visible: checked),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -202,64 +196,51 @@ class _ChoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color border = Palette.hairline;
-    Color fill = Palette.surface;
-    Color text = Palette.ink;
-
+    final TileFeedback feedback;
+    final Color text;
     if (!checked && isSelected) {
-      border = Palette.slate;
-      fill = Palette.slateTint;
+      feedback = TileFeedback.selected;
       text = Palette.slate;
     } else if (checked && isAnswer) {
-      border = Palette.correct;
-      fill = Palette.correctTint;
+      feedback = TileFeedback.correct;
       text = Palette.correct;
     } else if (checked && isSelected) {
-      border = Palette.wrong;
-      fill = Palette.wrongTint;
+      feedback = TileFeedback.incorrect;
       text = Palette.wrong;
+    } else {
+      feedback = TileFeedback.neutral;
+      text = Palette.ink;
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: fill,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: border),
+      padding: const EdgeInsets.only(bottom: 9),
+      child: SelectableTile(
+        feedback: feedback,
+        accent: Palette.slate,
+        onTap: onTap,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              size: 18,
+              color: isSelected ? text : Palette.inkSoft,
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  size: 18,
-                  color: isSelected ? text : Palette.inkSoft,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  height: 1.4,
+                  color: text,
+                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      height: 1.4,
-                      color: text,
-                      fontWeight:
-                          isSelected ? FontWeight.w500 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

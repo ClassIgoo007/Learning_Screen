@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../models/lesson.dart';
 import '../screens/kinetic_theory_shell.dart';
 import '../theme/palette.dart';
@@ -23,15 +24,16 @@ class ContentFrame extends StatelessWidget {
   }
 }
 
-/// The reading passage, set in a tinted card with a rule down the left edge so
-/// it reads as quoted material rather than instruction.
+/// The reading passage, set in a tinted, elevated card with a rule down the
+/// left edge so it reads as quoted material rather than instruction.
 ///
 /// Collapsible — tap the header to show or hide the body — the same
 /// interaction the Biology reading cards already use
 /// (`features/science/widgets/science_widgets.dart`'s `PassageCard`, icon +
 /// title + Hide/Read + chevron). Starts collapsed by default here, so the
 /// worksheet opens on the questions rather than a wall of text; Cloud
-/// Formation's passage stays permanently expanded.
+/// Formation's passage stays permanently expanded. Fades and slides in once
+/// on first build, like every other card on this tab.
 class PassageCard extends StatefulWidget {
   const PassageCard({super.key, required this.passage, this.initiallyOpen = false});
 
@@ -48,70 +50,90 @@ class _PassageCardState extends State<PassageCard> {
   @override
   Widget build(BuildContext context) {
     final passage = widget.passage;
-    return Container(
-      padding: EdgeInsets.fromLTRB(18, 14, 18, _open ? 18 : 14),
-      decoration: const BoxDecoration(
-        color: Palette.passageTint,
-        border: Border(left: BorderSide(color: Palette.slate, width: 3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: () => setState(() => _open = !_open),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    passage.title,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: Palette.ink,
-                      height: 1.3,
+    return EntranceFade(
+      child: Container(
+        padding: EdgeInsets.fromLTRB(18, 16, 18, _open ? 20 : 16),
+        decoration: BoxDecoration(
+          color: Palette.passageTint,
+          borderRadius: BorderRadius.circular(16),
+          border: const Border(left: BorderSide(color: Palette.slate, width: 4)),
+          boxShadow: elevationShadow(strength: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => setState(() => _open = !_open),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      passage.title,
+                      style: const TextStyle(
+                        fontSize: 18.5,
+                        fontWeight: FontWeight.w700,
+                        color: Palette.ink,
+                        height: 1.3,
+                        letterSpacing: -0.2,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _open ? 'Hide' : 'Read',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: Palette.slate,
+                  const SizedBox(width: 8),
+                  Text(
+                    _open ? 'Hide' : 'Read',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Palette.slate,
+                    ),
                   ),
-                ),
-                Icon(
-                  _open ? Icons.expand_less : Icons.expand_more,
-                  color: Palette.slate,
-                  size: 20,
-                ),
-              ],
+                  AnimatedRotation(
+                    turns: _open ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 220),
+                    child: const Icon(
+                      Icons.expand_more,
+                      color: Palette.slate,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (_open) ...[
-            if (passage.figureCaption.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                passage.figureCaption,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontStyle: FontStyle.italic,
-                  color: Palette.inkSoft,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Text(
-              passage.body,
-              style: const TextStyle(
-                fontSize: 15.5,
-                height: 1.65,
-                color: Palette.ink,
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              alignment: Alignment.topCenter,
+              child: !_open
+                  ? const SizedBox(width: double.infinity)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (passage.figureCaption.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            passage.figureCaption,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontStyle: FontStyle.italic,
+                              color: Palette.inkSoft,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        Text(
+                          passage.body,
+                          style: const TextStyle(
+                            fontSize: 15.5,
+                            height: 1.7,
+                            letterSpacing: 0.1,
+                            color: Palette.ink,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -127,15 +149,15 @@ class SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Text(
             text.toUpperCase(),
             style: const TextStyle(
-              fontSize: 11.5,
-              letterSpacing: 1.1,
-              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              letterSpacing: 1.3,
+              fontWeight: FontWeight.w700,
               color: Palette.inkSoft,
             ),
           ),
@@ -154,10 +176,9 @@ class SectionLabel extends StatelessWidget {
   }
 }
 
-/// Answered-count progress bar, shown in place of [SectionLabel]'s plain
-/// trailing count — the same `LinearProgressIndicator` treatment already used
-/// by the Biology reading quiz and the Bernoulli lab (rounded track, accent
-/// fill, "answered X of Y" readout) rather than a new control style.
+/// Answered-count progress header: a bold "X of Y" readout over a thick,
+/// animated, accent-glowing bar — progress as a first-class piece of UI
+/// rather than a plain line of text.
 class ProgressHeader extends StatelessWidget {
   const ProgressHeader({
     super.key,
@@ -182,38 +203,31 @@ class ProgressHeader extends StatelessWidget {
             Text(
               label.toUpperCase(),
               style: const TextStyle(
-                fontSize: 11.5,
-                letterSpacing: 1.1,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                letterSpacing: 1.3,
+                fontWeight: FontWeight.w700,
                 color: Palette.inkSoft,
               ),
             ),
             Text(
               '$answered of $total',
               style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
                 color: Palette.slate,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 8,
-            backgroundColor: Palette.slateTint,
-            valueColor: const AlwaysStoppedAnimation(Palette.slate),
-          ),
-        ),
+        const SizedBox(height: 9),
+        ModernProgressBar(value: ratio, accent: Palette.slate),
       ],
     );
   }
 }
 
-/// Result summary shown after marking.
+/// Result summary shown after marking — an elevated card that scales and
+/// fades in, with the score itself counting up rather than snapping in.
 class ScoreBanner extends StatelessWidget {
   const ScoreBanner({super.key, required this.score, required this.total});
 
@@ -226,42 +240,54 @@ class ScoreBanner extends StatelessWidget {
     final color = perfect ? Palette.correct : Palette.slate;
     final tint = perfect ? Palette.correctTint : Palette.slateTint;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
+    return ScaleFadeIn(
+      child: ElevatedCard(
         color: tint,
-        borderRadius: BorderRadius.circular(Sizes.cardRadius),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          Icon(perfect ? Icons.verified_outlined : Icons.insights_outlined,
-              color: color, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$score out of $total',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: color,
+        borderColor: color.withValues(alpha: 0.35),
+        radius: Sizes.cardRadius + 4,
+        glow: perfect ? color : null,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(
+          children: [
+            Icon(perfect ? Icons.verified_outlined : Icons.insights_outlined,
+                color: color, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CountUpNumber(
+                        value: score,
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                      Text(
+                        ' out of $total',
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  perfect
-                      ? 'Every item correct.'
-                      : 'Correct answers are shown beneath the misses.',
-                  style: const TextStyle(fontSize: 13, color: Palette.inkSoft),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    perfect
+                        ? 'Every item correct.'
+                        : 'Correct answers are shown beneath the misses.',
+                    style: const TextStyle(fontSize: 13, color: Palette.inkSoft),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -298,32 +324,22 @@ class ActionBar extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: AccentButton(
+                    label: secondaryLabel,
+                    accent: Palette.slate,
+                    filled: false,
+                    icon: Icons.refresh,
                     onPressed: onSecondary,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Palette.slate,
-                      side: const BorderSide(color: Palette.hairline),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(secondaryLabel),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
-                  child: FilledButton(
+                  child: AccentButton(
+                    label: primaryLabel,
+                    accent: Palette.slate,
+                    icon: Icons.checklist_rtl,
                     onPressed: onPrimary,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Palette.slate,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(primaryLabel),
                   ),
                 ),
               ],
@@ -367,7 +383,9 @@ class WatchBeatLink extends StatelessWidget {
   }
 }
 
-/// Pill button used by both animation screens for play/pause and beats.
+/// Pill button used by both animation screens for play/pause and beats. The
+/// selected state now carries a soft accent shadow and animates in, instead
+/// of snapping straight to a flat tint.
 class ControlPill extends StatelessWidget {
   const ControlPill({
     super.key,
@@ -386,18 +404,23 @@ class ControlPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = selected ? Palette.slate : Palette.inkSoft;
     return Material(
-      color: selected ? Palette.slateTint : Palette.surface,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
+            color: selected ? Palette.slateTint : Palette.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: selected ? Palette.slate : Palette.hairline,
+              width: selected ? 1.4 : 1,
             ),
+            boxShadow: selected ? accentGlow(Palette.slate, strength: 0.3) : null,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -411,7 +434,7 @@ class ControlPill extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   color: fg,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 ),
               ),
             ],
@@ -422,7 +445,9 @@ class ControlPill extends StatelessWidget {
   }
 }
 
-/// The caption beneath an animation, naming the beat and explaining it.
+/// The caption beneath an animation, naming the beat and explaining it. The
+/// title and body crossfade to the new beat's copy instead of jump-cutting,
+/// matching the diagram's own smooth transition.
 class CaptionPanel extends StatelessWidget {
   const CaptionPanel({super.key, required this.title, required this.body});
 
@@ -431,39 +456,39 @@ class CaptionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    return ElevatedCard(
+      color: Palette.slateTint,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: Palette.slateTint,
-        borderRadius: BorderRadius.circular(Sizes.cardRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Palette.slate,
+      child: CaptionCrossfade(
+        keyValue: title,
+        child: Column(
+          key: ValueKey(title),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+                color: Palette.slate,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            body,
-            style: const TextStyle(
-              fontSize: 15,
-              height: 1.55,
-              color: Palette.ink,
+            const SizedBox(height: 7),
+            Text(
+              body,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Palette.ink,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-
 
 /// Scales a fixed design canvas into the available width and repaints it on
 /// every tick of the supplied animation. Every animated figure in the app is
@@ -523,19 +548,27 @@ class SegmentedPicker extends StatelessWidget {
     Widget segment(String label, bool selected, VoidCallback onTap) {
       return Expanded(
         child: Material(
-          color: selected ? Palette.slate : Palette.surface,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(9),
           child: InkWell(
             borderRadius: BorderRadius.circular(9),
             onTap: onTap,
-            child: Padding(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 6),
+              decoration: BoxDecoration(
+                color: selected ? Palette.slate : Colors.transparent,
+                borderRadius: BorderRadius.circular(9),
+                boxShadow:
+                    selected ? accentGlow(Palette.slate, strength: 0.35) : null,
+              ),
               child: Text(
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                   color: selected ? Colors.white : Palette.inkSoft,
                 ),
               ),
