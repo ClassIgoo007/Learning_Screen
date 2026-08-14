@@ -9,8 +9,9 @@ abstract final class SceneMetrics {
   /// Where the apple hangs before it lets go.
   static const Offset appleStart = Offset(232, 690);
 
-  /// Where the apple comes to rest on the grass.
-  static const Offset appleEnd = Offset(232, 1148);
+  /// Where the apple comes to rest — on Newton's head, not the grass. Chosen
+  /// to sit just above his eyes and fringe, nestled into the top of his wig.
+  static const Offset appleEnd = Offset(668, 764);
 
   static const double appleRadius = 44;
 
@@ -25,4 +26,10 @@ abstract final class SceneMetrics {
 
   static double appleY(double drop) =>
       appleStart.dy + (appleEnd.dy - appleStart.dy) * drop;
+
+  /// The apple travels sideways from the branch to Newton's head as it
+  /// falls, using the same [drop] progress as [appleY] so the path traced is
+  /// a straight line between the two points.
+  static double appleX(double drop) =>
+      appleStart.dx + (appleEnd.dx - appleStart.dx) * drop;
 }

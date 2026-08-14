@@ -475,27 +475,42 @@ class ScaledCanvas extends StatelessWidget {
     required this.size,
     required this.animation,
     required this.painterBuilder,
+    this.onTap,
   });
 
   final Size size;
   final Listenable animation;
   final CustomPainter Function() painterBuilder;
 
+  /// Called with the tap position in canvas units (the same space as
+  /// [size]), regardless of how far the figure has been scaled on screen.
+  /// Most figures aren't interactive, so this is optional.
+  final void Function(Offset canvasPosition)? onTap;
+
   @override
   Widget build(BuildContext context) {
+    Widget canvas = SizedBox(
+      width: size.width,
+      height: size.height,
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, _) =>
+            CustomPaint(painter: painterBuilder(), size: size),
+      ),
+    );
+    final onTap = this.onTap;
+    if (onTap != null) {
+      canvas = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (details) => onTap(details.localPosition),
+        child: canvas,
+      );
+    }
     return AspectRatio(
       aspectRatio: size.width / size.height,
       child: FittedBox(
         fit: BoxFit.contain,
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
-          child: AnimatedBuilder(
-            animation: animation,
-            builder: (context, _) =>
-                CustomPaint(painter: painterBuilder(), size: size),
-          ),
-        ),
+        child: canvas,
       ),
     );
   }

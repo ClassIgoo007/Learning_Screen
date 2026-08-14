@@ -28,9 +28,54 @@ class _AnimationScreenState extends State<AnimationScreen>
   /// 0 = the arc just struck, 1 = the jet at full temperature.
   late final AnimationController _intensity;
 
+  /// The valve's manual override, 0 = closed .. 1 = open. Only read while
+  /// [_manualValveOverride] is set; otherwise the beat drives the valve.
+  late final AnimationController _manualValve;
+
+  /// True once the student has tapped the valve directly. Cleared whenever a
+  /// beat is requested (pill, segmented control or a "Watch beat" link), so
+  /// beat navigation always wins and shows its own canonical valve state —
+  /// the student can then resume tapping from there.
+  bool _manualValveOverride = false;
+  bool _manualValveOpen = false;
+
   bool _running = true;
 
   CryoStage get _stage => widget.stage.value;
+
+  /// The stage fed to [CryoState]: the beat's own position, unless the
+  /// student is manually driving the valve, in which case 1..2 (closed..open)
+  /// reuses the exact compression/expansion visuals Beats 1 and 2 already
+  /// define, so nothing about the physics needs to be duplicated.
+  double get _effectiveStage =>
+      _manualValveOverride ? 1 + _manualValve.value : _cycle.value;
+
+  void _toggleValve() {
+    final currentlyOpen = _manualValveOverride
+        ? _manualValveOpen
+        : CryoState(t: 0, stage: _cycle.value).valveOpen > 0.5;
+    if (!_manualValveOverride) {
+      // Seed the manual controller from wherever the beat currently has the
+      // valve, so taking over control is seamless rather than a jump.
+      _manualValve.value = CryoState(t: 0, stage: _cycle.value).valveOpen;
+    }
+    setState(() {
+      _manualValveOverride = true;
+      _manualValveOpen = !currentlyOpen;
+    });
+    _manualValve.animateTo(_manualValveOpen ? 1 : 0, curve: Curves.easeInOut);
+  }
+
+  void _handleApparatusTap(Offset canvasPosition) {
+    // Generous relative to the drawn valve (radius 30): on the narrowest
+    // phone widths the figure scales down to roughly a third size, so this
+    // still clears the ~44pt minimum touch target on screen.
+    const hitRadius = 85.0;
+    final delta = canvasPosition - CryoMetrics.valveCentre;
+    if (delta.distanceSquared <= hitRadius * hitRadius) {
+      _toggleValve();
+    }
+  }
 
   @override
   void initState() {
@@ -51,6 +96,10 @@ class _AnimationScreenState extends State<AnimationScreen>
       duration: const Duration(milliseconds: 1200),
       value: _stage == CryoStage.plasmaJet ? 1 : 0,
     );
+    _manualValve = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    );
     widget.stage.addListener(_onStageRequested);
   }
 
@@ -60,11 +109,12 @@ class _AnimationScreenState extends State<AnimationScreen>
     _clock.dispose();
     _cycle.dispose();
     _intensity.dispose();
+    _manualValve.dispose();
     super.dispose();
   }
 
   void _onStageRequested() {
-    setState(() {});
+    setState(() => _manualValveOverride = false);
     const curve = Curves.easeInOut;
     if (_stage.isApparatus) {
       _cycle.animateTo(_stage.beat.toDouble(), curve: curve);
@@ -130,12 +180,14 @@ class _AnimationScreenState extends State<AnimationScreen>
                         child: apparatus
                             ? ScaledCanvas(
                                 size: CryoMetrics.canvas,
-                                animation: Listenable.merge([_clock, _cycle]),
+                                animation: Listenable.merge(
+                                    [_clock, _cycle, _manualValve]),
                                 painterBuilder: () => CryogenicPainter(
                                   CryoState(
-                                      t: _clock.value, stage: _cycle.value),
+                                      t: _clock.value, stage: _effectiveStage),
                                   labelColor: Palette.inkSoft,
                                 ),
+                                onTap: _handleApparatusTap,
                               )
                             : ScaledCanvas(
                                 size: PlasmaMetrics.canvas,

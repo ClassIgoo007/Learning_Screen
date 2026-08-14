@@ -10,19 +10,21 @@ const Lesson kCryogenicsLesson = Lesson(
     title: 'The principle of cryogenics',
     figureCaption: 'Fig. 4-9 — the principle of cryogenics',
     body:
-        'Very low temperatures are produced with cryogenic equipment, which '
-        'works much like a refrigerator or a room air conditioner. It rests on '
-        'one fact: compressed air escaping through a small opening gets cooler '
-        'as it expands into a larger volume. Blow on your palm with your mouth '
-        'wide open and the air feels warm; blow through pursed lips and it '
-        'feels much cooler. In the apparatus an electrically driven compressor '
-        'pumps gas from the expansion chamber up into the compression chamber '
-        'while the valve joining them is closed. The compressed gas is heated '
-        'above room temperature, and the excess heat escapes into the '
-        'surroundings. When the valve is opened the gas expands again and '
-        'sucks heat in from the surroundings. Repeated, the sequence works as '
-        'a thermal pump that takes heat away from the expander and pumps it '
-        'into the compressor.',
+        'To produce very low temperatures, we use cryogenic equipment, which '
+        'is similar to the mechanism of a refrigerator or a room air '
+        'conditioner and is based on the fact that compressed air escaping '
+        'through a small opening gets cooler when it expands into a larger '
+        'volume.\n\n'
+        'The principle of cryogenic apparatus is shown in Figure 4-9. The '
+        'apparatus consists of an electrically driven compressor that pumps '
+        'the gas from the expansion chamber up into the compression chamber '
+        'when the valve on the right connecting the two chambers is closed. '
+        'The compressed gas is heated above room temperature, and the excess '
+        'heat escapes into the surroundings — be it into the kitchen in '
+        'which the refrigerator stands, or into the air outside the windows '
+        'in which the air conditioner is installed. When the valve '
+        'separating the compression chamber is opened, the gas expands '
+        'again and sucks in heat from the surroundings.',
   ),
   choiceQuestions: [
     ChoiceQuestion(
