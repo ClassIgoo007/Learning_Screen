@@ -148,16 +148,10 @@ class _AnimationScreenState extends State<AnimationScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SegmentedPicker(
-                left: 'Cryogenic cycle · 4-9',
-                right: 'Plasma jet · 4-8',
-                leftSelected: apparatus,
-                onLeft: () => _select(CryoStage.compression),
-                onRight: () => _select(CryoStage.plasmaJet),
-              ),
-              const SizedBox(height: 14),
+              // Figure leads — Kinetic puts controls first; Cloud leads with
+              // sky + timeline. Heat opens on the apparatus itself.
               FigureFrame(
-                accent: Palette.slate,
+                accent: apparatus ? Palette.cold : Palette.hot,
                 caption: apparatus
                     ? '4-9 — the gas heated by compression in the '
                         'upper chamber loses heat to the surroundings, '
@@ -205,10 +199,16 @@ class _AnimationScreenState extends State<AnimationScreen>
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              const SizedBox(height: 14),
+              SegmentedPicker(
+                left: 'Cryogenic cycle · 4-9',
+                right: 'Plasma jet · 4-8',
+                leftSelected: apparatus,
+                onLeft: () => _select(CryoStage.compression),
+                onRight: () => _select(CryoStage.plasmaJet),
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: [
                   if (!reduceMotion)
                     ControlPill(
@@ -218,12 +218,24 @@ class _AnimationScreenState extends State<AnimationScreen>
                       label: _running ? 'Pause' : 'Play',
                       onTap: _togglePlay,
                     ),
-                  for (final s in beats)
-                    ControlPill(
-                      label: '${s.beat} · ${s.label}',
-                      selected: s == _stage,
-                      onTap: () => _select(s),
+                  if (!reduceMotion) const SizedBox(width: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < beats.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            ControlPill(
+                              label: '${beats[i].beat} · ${beats[i].label}',
+                              selected: beats[i] == _stage,
+                              onTap: () => _select(beats[i]),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),

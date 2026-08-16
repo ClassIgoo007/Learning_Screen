@@ -150,7 +150,7 @@ class PhysicsHubScreen extends StatelessWidget {
               'Watch a plasma jet and a cryogenic cycle, then answer questions',
           icon: Icons.thermostat_rounded,
           color: AppColors.yellow,
-          image: 'assets/sec_physics.png',
+          image: 'assets/heat_temperature_preview.png',
           builder: (_) => const HeatAndTemperatureShell(),
         ),
       ],

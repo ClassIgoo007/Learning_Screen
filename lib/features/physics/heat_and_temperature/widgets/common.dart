@@ -49,18 +49,61 @@ class _PassageCardState extends State<PassageCard> {
     return EntranceFade(
       child: ElevatedCard(
         color: Palette.surface,
-        padding: EdgeInsets.fromLTRB(16, 16, 16, _open ? 18 : 16),
+        radius: Sizes.cardRadius,
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              height: 4,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Palette.hot, Palette.slate, Palette.cold],
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 14, 16, _open ? 18 : 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             InkWell(
               onTap: () => setState(() => _open = !_open),
               borderRadius: BorderRadius.circular(12),
               child: Row(
                 children: [
-                  const AccentGlyph(
-                    icon: Icons.thermostat_outlined,
-                    accent: Palette.slate,
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Palette.hotTint,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.local_fire_department_rounded,
+                          color: Palette.hot,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Palette.coldTint,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.ac_unit_rounded,
+                          color: Palette.cold,
+                          size: 18,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -68,11 +111,11 @@ class _PassageCardState extends State<PassageCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Reading',
+                          'Reading · thermal',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: Palette.slate,
+                            color: Palette.inkSoft,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -141,6 +184,9 @@ class _PassageCardState extends State<PassageCard> {
                         ),
                       ],
                     ),
+            ),
+                ],
+              ),
             ),
           ],
         ),
@@ -524,8 +570,8 @@ class ScaledCanvas extends StatelessWidget {
   }
 }
 
-/// Two-way segmented control choosing which figure — or which table — is on
-/// screen.
+/// Two-way segmented control — cold (left) vs hot (right) identity for this
+/// thermal lesson.
 class SegmentedPicker extends StatelessWidget {
   const SegmentedPicker({
     super.key,
@@ -544,7 +590,12 @@ class SegmentedPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget segment(String label, bool selected, VoidCallback onTap) {
+    Widget segment(
+      String label,
+      bool selected,
+      VoidCallback onTap,
+      Color accent,
+    ) {
       return Expanded(
         child: Material(
           color: Colors.transparent,
@@ -557,10 +608,10 @@ class SegmentedPicker extends StatelessWidget {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               decoration: BoxDecoration(
-                color: selected ? Palette.slate : Colors.transparent,
+                color: selected ? accent : Colors.transparent,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow:
-                    selected ? accentGlow(Palette.slate, strength: 0.35) : null,
+                    selected ? accentGlow(accent, strength: 0.35) : null,
               ),
               child: Text(
                 label,
@@ -568,7 +619,7 @@ class SegmentedPicker extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? onAccent(Palette.slate) : Palette.inkSoft,
+                  color: selected ? onAccent(accent) : Palette.inkSoft,
                 ),
               ),
             ),
@@ -580,14 +631,20 @@ class SegmentedPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Palette.slateTint,
+        gradient: const LinearGradient(
+          colors: [
+            Palette.coldTint,
+            Palette.hotTint,
+          ],
+        ),
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Palette.hairline),
       ),
       child: Row(
         children: [
-          segment(left, leftSelected, onLeft),
+          segment(left, leftSelected, onLeft, Palette.cold),
           const SizedBox(width: 4),
-          segment(right, !leftSelected, onRight),
+          segment(right, !leftSelected, onRight, Palette.hot),
         ],
       ),
     );

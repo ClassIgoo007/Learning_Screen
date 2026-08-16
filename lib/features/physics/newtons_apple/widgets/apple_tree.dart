@@ -127,18 +127,19 @@ class _AppleTreePainter extends CustomPainter {
     );
 
     // Low branch that carries the apple which is about to fall.
+    // Tip curves toward SceneMetrics.appleStart (360, 520).
     limb.strokeWidth = 30;
     canvas.drawPath(
       Path()
         ..moveTo(614, 662)
-        ..cubicTo(500, 596, 386, 588, 232, 640),
+        ..cubicTo(500, 596, 420, 560, 360, 520),
       limb,
     );
     limb.strokeWidth = 18;
     canvas.drawPath(
       Path()
-        ..moveTo(430, 604)
-        ..quadraticBezierTo(392, 552, 344, 522),
+        ..moveTo(430, 580)
+        ..quadraticBezierTo(392, 540, 344, 510),
       limb,
     );
   }

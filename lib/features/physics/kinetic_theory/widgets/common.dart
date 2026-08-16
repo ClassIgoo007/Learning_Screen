@@ -49,18 +49,32 @@ class _PassageCardState extends State<PassageCard> {
     return EntranceFade(
       child: ElevatedCard(
         color: Palette.surface,
-        padding: EdgeInsets.fromLTRB(16, 16, 16, _open ? 18 : 16),
+        radius: Sizes.cardRadius,
+        borderColor: Palette.hairline,
+        borderWidth: 1.5,
+        elevated: false,
+        padding: EdgeInsets.fromLTRB(14, 14, 14, _open ? 16 : 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             InkWell(
               onTap: () => setState(() => _open = !_open),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               child: Row(
                 children: [
-                  const AccentGlyph(
-                    icon: Icons.science_outlined,
-                    accent: Palette.slate,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Palette.slate, width: 1.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.science_outlined,
+                      color: Palette.slate,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -68,11 +82,12 @@ class _PassageCardState extends State<PassageCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Reading',
+                          'READING · LAB NOTES',
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
                             color: Palette.slate,
+                            letterSpacing: 0.8,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -509,7 +524,7 @@ class ScaledCanvas extends StatelessWidget {
   }
 }
 
-/// Two-way segmented control choosing which figure of a unit is on screen.
+/// Two-way segmented control with an instrument outline — Kinetic's lab look.
 class SegmentedPicker extends StatelessWidget {
   const SegmentedPicker({
     super.key,
@@ -532,26 +547,29 @@ class SegmentedPicker extends StatelessWidget {
       return Expanded(
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(8),
             onTap: onTap,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 180),
               curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
               decoration: BoxDecoration(
                 color: selected ? Palette.slate : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow:
-                    selected ? accentGlow(Palette.slate, strength: 0.35) : null,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: selected ? Palette.slate : Colors.transparent,
+                  width: 1.5,
+                ),
               ),
               child: Text(
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  letterSpacing: selected ? 0.2 : 0,
                   color: selected ? onAccent(Palette.slate) : Palette.inkSoft,
                 ),
               ),
@@ -562,15 +580,16 @@ class SegmentedPicker extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(5),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Palette.slateTint,
-        borderRadius: BorderRadius.circular(18),
+        color: Palette.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Palette.hairline, width: 1.5),
       ),
       child: Row(
         children: [
           segment(left, leftSelected, onLeft),
-          const SizedBox(width: 4),
+          Container(width: 1, height: 28, color: Palette.hairline),
           segment(right, !leftSelected, onRight),
         ],
       ),

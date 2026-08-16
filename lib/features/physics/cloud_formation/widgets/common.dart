@@ -37,58 +37,92 @@ class PassageCard extends StatelessWidget {
     return EntranceFade(
       child: ElevatedCard(
         color: Palette.surface,
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                AccentGlyph(icon: Icons.cloud_outlined, accent: Palette.slate),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Reading',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Palette.slate,
-                    ),
+        radius: Sizes.cardRadius,
+        padding: EdgeInsets.zero,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 6,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Palette.rain, Palette.updraft],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              passage.title,
-              style: const TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
-                color: Palette.ink,
-                height: 1.25,
-                letterSpacing: -0.3,
               ),
-            ),
-            if (passage.figureCaption.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                passage.figureCaption,
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
-                  color: Palette.inkSoft,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Palette.slate,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.cloud_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'Reading · sky',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Palette.slate,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        passage.title,
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: Palette.ink,
+                          height: 1.25,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      if (passage.figureCaption.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          passage.figureCaption,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: Palette.inkSoft,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Text(
+                        passage.body,
+                        style: const TextStyle(
+                          fontSize: 15.5,
+                          height: 1.7,
+                          color: Palette.ink,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            Text(
-              passage.body,
-              style: const TextStyle(
-                fontSize: 15.5,
-                height: 1.7,
-                color: Palette.ink,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -113,7 +147,10 @@ class ProgressHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final ratio = total == 0 ? 0.0 : answered / total;
     return ElevatedCard(
-      color: Palette.surface,
+      color: Palette.passageTint,
+      radius: Sizes.cardRadius,
+      elevated: false,
+      borderColor: Palette.hairline,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,9 +169,9 @@ class ProgressHeader extends StatelessWidget {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Palette.slateTint,
+                  color: Palette.slate,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -142,14 +179,14 @@ class ProgressHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: Palette.slate,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          ModernProgressBar(value: ratio, accent: Palette.slate),
+          ModernProgressBar(value: ratio, accent: Palette.rain),
         ],
       ),
     );
