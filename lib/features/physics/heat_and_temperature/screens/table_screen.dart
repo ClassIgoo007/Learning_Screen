@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../data/reference_data.dart';
 import '../models/reference_table.dart';
 import '../theme/palette.dart';
@@ -48,14 +49,15 @@ class _TableScreenState extends State<TableScreen> {
                 onLeft: () => setState(() => _gases = true),
                 onRight: () => setState(() => _gases = false),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               Text(
                 '${table.number} · ${table.title}',
                 style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
                   color: Palette.ink,
-                  height: 1.3,
+                  height: 1.25,
+                  letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 14),
@@ -67,12 +69,9 @@ class _TableScreenState extends State<TableScreen> {
                 onToggleSort: () => setState(() => _sorted = !_sorted),
               ),
               const SizedBox(height: 16),
-              Container(
+              ElevatedCard(
+                color: Palette.surface,
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                decoration: BoxDecoration(
-                  color: Palette.slateTint,
-                  borderRadius: BorderRadius.circular(Sizes.cardRadius),
-                ),
                 child: Text(
                   table.note,
                   style: const TextStyle(
@@ -117,12 +116,9 @@ class _TableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Palette.surface,
-        borderRadius: BorderRadius.circular(Sizes.cardRadius),
-        border: Border.all(color: Palette.hairline),
-      ),
+    return ElevatedCard(
+      color: Palette.surface,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Column(
         children: [
           _HeaderRow(
@@ -135,7 +131,6 @@ class _TableCard extends StatelessWidget {
               reading: rows[i],
               table: table,
               accent: accent,
-              last: i == rows.length - 1,
             ),
         ],
       ),
@@ -158,44 +153,29 @@ class _HeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     const style = TextStyle(
       fontSize: 12,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
       color: Palette.inkSoft,
       height: 1.3,
     );
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 8, 10),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Palette.hairline)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 4, 10),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const Expanded(
-            flex: 32,
-            child: Text('Substance', style: style),
-          ),
           Expanded(
-            flex: 27,
-            child: Text(table.firstColumn, style: style,
-                textAlign: TextAlign.right),
+            child: Text(
+              '${table.firstColumn}  ·  ${table.secondColumn}',
+              style: style,
+            ),
           ),
-          Expanded(
-            flex: 27,
-            child: Text(table.secondColumn, style: style,
-                textAlign: TextAlign.right),
-          ),
-          SizedBox(
-            width: 40,
-            child: IconButton(
-              onPressed: onToggleSort,
-              visualDensity: VisualDensity.compact,
-              tooltip: sorted ? 'Table order' : 'Sort by temperature',
-              icon: Icon(
-                sorted ? Icons.sort : Icons.sort_outlined,
-                size: 18,
-                color: sorted ? Palette.slate : Palette.inkSoft,
-              ),
+          IconButton(
+            onPressed: onToggleSort,
+            visualDensity: VisualDensity.compact,
+            tooltip: sorted ? 'Table order' : 'Sort by temperature',
+            icon: Icon(
+              sorted ? Icons.sort_rounded : Icons.sort_outlined,
+              size: 20,
+              color: sorted ? Palette.slate : Palette.inkSoft,
             ),
           ),
         ],
@@ -209,66 +189,77 @@ class _DataRow extends StatelessWidget {
     required this.reading,
     required this.table,
     required this.accent,
-    required this.last,
   });
 
   final SubstanceReading reading;
   final ReferenceTable table;
   final Color accent;
-  final bool last;
 
   @override
   Widget build(BuildContext context) {
-    const valueStyle = TextStyle(
-      fontSize: 14.5,
-      color: Palette.ink,
-      fontFeatures: [FontFeature.tabularFigures()],
-    );
-
     return Semantics(
       label: '${reading.substance}, ${table.firstColumn} '
           '${reading.first} degrees, ${table.secondColumn} '
           '${reading.second} degrees',
       excludeSemantics: true,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         decoration: BoxDecoration(
-          border: last
-              ? null
-              : const Border(
-                  bottom: BorderSide(color: Palette.hairline, width: 0.6)),
+          color: accent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           children: [
             Row(
               children: [
                 Expanded(
-                  flex: 32,
                   child: Text(
                     reading.substance,
                     style: const TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: Palette.ink,
                     ),
                   ),
                 ),
-                Expanded(
-                  flex: 27,
-                  child: Text('${reading.first}', style: valueStyle,
-                      textAlign: TextAlign.right),
-                ),
-                Expanded(
-                  flex: 27,
-                  child: Text('${reading.second}', style: valueStyle,
-                      textAlign: TextAlign.right),
-                ),
-                const SizedBox(width: 8),
+                _ValueChip(value: reading.first, accent: accent),
+                const SizedBox(width: 6),
+                _ValueChip(value: reading.second, accent: accent),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _SpanBar(reading: reading, table: table, accent: accent),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ValueChip extends StatelessWidget {
+  const _ValueChip({required this.value, required this.accent});
+
+  final num value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 58),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Palette.surface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '$value',
+        textAlign: TextAlign.right,
+        style: TextStyle(
+          fontSize: 13.5,
+          fontWeight: FontWeight.w700,
+          color: accent,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
     );
@@ -299,38 +290,39 @@ class _SpanBar extends StatelessWidget {
         final right = a < b ? b : a;
 
         return SizedBox(
-          height: 10,
+          height: 12,
           child: Stack(
             children: [
               Container(
-                height: 4,
+                height: 6,
                 margin: const EdgeInsets.only(top: 3),
                 decoration: BoxDecoration(
-                  color: Palette.hairline,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Palette.surface,
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
               Positioned(
                 left: left,
-                width: (right - left).clamp(3.0, width),
+                width: (right - left).clamp(4.0, width),
                 child: Container(
-                  height: 4,
+                  height: 6,
                   margin: const EdgeInsets.only(top: 3),
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(2),
+                    color: accent.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
               for (final x in [a, b])
                 Positioned(
-                  left: (x - 4).clamp(0.0, width - 8),
+                  left: (x - 5).clamp(0.0, width - 10),
                   child: Container(
-                    width: 8,
-                    height: 8,
+                    width: 10,
+                    height: 10,
                     decoration: BoxDecoration(
                       color: accent,
                       shape: BoxShape.circle,
+                      boxShadow: accentGlow(accent, strength: 0.3),
                     ),
                   ),
                 ),

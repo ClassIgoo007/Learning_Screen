@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../animation/scene_metrics.dart';
 import '../animation/scene_timeline.dart';
 import '../painting/scene_painters.dart';
@@ -90,45 +91,27 @@ class _AnimationScreenState extends State<AnimationScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                decoration: BoxDecoration(
-                  color: Palette.surface,
-                  borderRadius: BorderRadius.circular(Sizes.cardRadius),
-                  border: Border.all(color: Palette.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RepaintBoundary(
-                      child: AspectRatio(
-                        aspectRatio: SceneMetrics.canvas.width /
-                            SceneMetrics.canvas.height,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: SizedBox(
-                            width: SceneMetrics.canvas.width,
-                            height: SceneMetrics.canvas.height,
-                            child: _SceneStageView(
-                              clock: _clock,
-                              stageClock: _stageClock,
-                              stageValue: () => _stageValue,
-                            ),
-                          ),
+              FigureFrame(
+                accent: Palette.slate,
+                caption: '17-11 — the formation of rain in a cumulonimbus '
+                    'cloud',
+                child: RepaintBoundary(
+                  child: AspectRatio(
+                    aspectRatio: SceneMetrics.canvas.width /
+                        SceneMetrics.canvas.height,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: SceneMetrics.canvas.width,
+                        height: SceneMetrics.canvas.height,
+                        child: _SceneStageView(
+                          clock: _clock,
+                          stageClock: _stageClock,
+                          stageValue: () => _stageValue,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Fig. 17-11 — the formation of rain in a cumulonimbus '
-                      'cloud',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontStyle: FontStyle.italic,
-                        color: Palette.inkSoft,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -138,13 +121,15 @@ class _AnimationScreenState extends State<AnimationScreen>
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   if (!reduceMotion)
-                    _ControlPill(
-                      icon: _running ? Icons.pause : Icons.play_arrow,
+                    ControlPill(
+                      icon: _running
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       label: _running ? 'Pause' : 'Play',
                       onTap: _togglePlay,
                     ),
                   for (final s in SceneStage.values)
-                    _ControlPill(
+                    ControlPill(
                       label: '${s.beat} · ${s.label}',
                       selected: s == _stage,
                       onTap: () => _select(s),
@@ -152,35 +137,9 @@ class _AnimationScreenState extends State<AnimationScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                decoration: BoxDecoration(
-                  color: Palette.slateTint,
-                  borderRadius: BorderRadius.circular(Sizes.cardRadius),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Beat ${_stage.beat} · ${_stage.label}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Palette.slate,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _stage.caption,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.55,
-                        color: Palette.ink,
-                      ),
-                    ),
-                  ],
-                ),
+              CaptionPanel(
+                title: 'Beat ${_stage.beat} · ${_stage.label}',
+                body: _stage.caption,
               ),
               const SizedBox(height: 14),
               const Text(
@@ -193,42 +152,19 @@ class _AnimationScreenState extends State<AnimationScreen>
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
-                'BEAT CAPTIONS',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  letterSpacing: 1.1,
-                  fontWeight: FontWeight.w600,
-                  color: Palette.inkSoft,
-                ),
-              ),
-              const SizedBox(height: 10),
-              for (final s in SceneStage.values) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        height: 1.5,
-                        color: Palette.ink,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: '${s.beat} · ${s.label} — ',
-                          style: TextStyle(
-                            fontWeight: s == _stage
-                                ? FontWeight.w700
-                                : FontWeight.w600,
-                            color: s == _stage ? Palette.slate : Palette.ink,
-                          ),
-                        ),
-                        TextSpan(text: s.caption),
-                      ],
+              CaptionTimeline(
+                accent: Palette.slate,
+                tint: Palette.slateTint,
+                beats: [
+                  for (final s in SceneStage.values)
+                    TimelineBeat(
+                      kicker: '${s.beat} · ${s.label}',
+                      body: s.caption,
+                      selected: s == _stage,
+                      onTap: () => _select(s),
                     ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ],
           ),
         ),
@@ -277,59 +213,6 @@ class _SceneStageView extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
-}
-
-class _ControlPill extends StatelessWidget {
-  const _ControlPill({
-    required this.label,
-    required this.onTap,
-    this.icon,
-    this.selected = false,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final IconData? icon;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = selected ? Palette.slate : Palette.inkSoft;
-    return Material(
-      color: selected ? Palette.slateTint : Palette.surface,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: selected ? Palette.slate : Palette.hairline,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 16, color: fg),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: fg,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
