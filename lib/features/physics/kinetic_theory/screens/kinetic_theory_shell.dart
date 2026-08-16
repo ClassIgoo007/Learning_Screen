@@ -27,9 +27,9 @@ class LessonNavigator extends InheritedWidget {
   bool updateShouldNotify(LessonNavigator oldWidget) => false;
 }
 
-/// Kinetic theory of gases worksheet: animation + multiple choice + fill in.
-/// Outer chrome matches the Learning Hub; inner worksheet keeps its own paper
-/// UI, same split as the other physics lessons (see `cloud_formation_shell`).
+/// Kinetic theory worksheet with instrument-lab chrome: violet accent rail,
+/// denser paper, and a bottom icon rail — not Cloud's top capsules or Heat's
+/// thermal dual-tone bar.
 class KineticTheoryShell extends StatefulWidget {
   const KineticTheoryShell({super.key});
 
@@ -55,6 +55,12 @@ class _KineticTheoryShellState extends State<KineticTheoryShell> {
     'Part 2 · Fill in',
   ];
 
+  static const _tabs = <(IconData, IconData, String)>[
+    (Icons.scatter_plot_outlined, Icons.scatter_plot, 'Model'),
+    (Icons.fact_check_outlined, Icons.fact_check, 'Check'),
+    (Icons.notes_outlined, Icons.notes, 'Notes'),
+  ];
+
   @override
   void dispose() {
     _stage.dispose();
@@ -66,7 +72,6 @@ class _KineticTheoryShellState extends State<KineticTheoryShell> {
     setState(() => _index = 0);
   }
 
-  /// Off-screen tabs sit inside a muted ticker, so nothing animates unseen.
   Widget _page(Widget child, bool visible) =>
       TickerMode(enabled: visible, child: child);
 
@@ -84,25 +89,63 @@ class _KineticTheoryShellState extends State<KineticTheoryShell> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const CircleBackButton(),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Palette.slate,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'LAB',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: Palette.slate,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Fig. ${_index == 0 ? '8-8 / 8-9' : _index == 1 ? 'Q' : 'B'}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Palette.inkSoft,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
                             Text(
                               _titles[_index],
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.ink,
+                                letterSpacing: -0.2,
                               ),
                             ),
                             Text(
                               _subtitles[_index],
                               style: const TextStyle(
-                                fontSize: 12.5,
+                                fontSize: 12,
                                 color: AppColors.inkSoft,
                               ),
                             ),
@@ -112,59 +155,142 @@ class _KineticTheoryShellState extends State<KineticTheoryShell> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Expanded(
-                  child: ColoredBox(
-                    color: Palette.paper,
-                    child: IndexedStack(
-                      index: _index,
-                      children: [
-                        _page(AnimationScreen(stage: _stage), _index == 0),
-                        _page(
-                          const ChoiceScreen(lesson: kKineticLesson),
-                          _index == 1,
-                        ),
-                        _page(
-                          const BlankScreen(lesson: kKineticLesson),
-                          _index == 2,
-                        ),
-                      ],
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Palette.paper,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Palette.hairline, width: 1.5),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            width: 5,
+                            decoration: const BoxDecoration(
+                              color: Palette.slate,
+                              borderRadius: BorderRadius.horizontal(
+                                left: Radius.circular(8),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: IndexedStack(
+                              index: _index,
+                              children: [
+                                _page(
+                                  AnimationScreen(stage: _stage),
+                                  _index == 0,
+                                ),
+                                _page(
+                                  const ChoiceScreen(lesson: kKineticLesson),
+                                  _index == 1,
+                                ),
+                                _page(
+                                  const BlankScreen(lesson: kKineticLesson),
+                                  _index == 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                Material(
-                  color: Palette.surface,
-                  elevation: 0,
-                  child: NavigationBar(
-                    selectedIndex: _index,
-                    backgroundColor: Palette.surface,
-                    indicatorColor: Palette.slateTint,
-                    height: 64,
-                    onDestinationSelected: (i) => setState(() => _index = i),
-                    destinations: const [
-                      NavigationDestination(
-                        icon: Icon(Icons.scatter_plot_outlined),
-                        selectedIcon:
-                            Icon(Icons.scatter_plot, color: Palette.slate),
-                        label: 'Animation',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.checklist_outlined),
-                        selectedIcon:
-                            Icon(Icons.checklist, color: Palette.slate),
-                        label: 'Questions',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.edit_note_outlined),
-                        selectedIcon:
-                            Icon(Icons.edit_note, color: Palette.slate),
-                        label: 'Blanks',
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 8),
+                _LabTabRail(
+                  index: _index,
+                  tabs: _tabs,
+                  onSelect: (i) => setState(() => _index = i),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Square-edged bottom rail — Kinetic's instrument-panel navigation.
+class _LabTabRail extends StatelessWidget {
+  const _LabTabRail({
+    required this.index,
+    required this.tabs,
+    required this.onSelect,
+  });
+
+  final int index;
+  final List<(IconData, IconData, String)> tabs;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Palette.surface,
+      elevation: 0,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+          child: Row(
+            children: [
+              for (var i = 0; i < tabs.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => onSelect(i),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: index == i
+                              ? Palette.slateTint
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: index == i
+                                ? Palette.slate
+                                : Palette.hairline,
+                            width: index == i ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              index == i ? tabs[i].$2 : tabs[i].$1,
+                              size: 22,
+                              color: index == i
+                                  ? Palette.slate
+                                  : Palette.inkSoft,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              tabs[i].$3,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: index == i
+                                    ? Palette.slate
+                                    : Palette.inkSoft,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),

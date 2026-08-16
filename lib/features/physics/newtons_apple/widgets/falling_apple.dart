@@ -42,10 +42,10 @@ class FallingApple extends StatelessWidget {
           ),
         if (state.impactProgress > 0.001 && state.impactProgress < 0.999)
           Positioned(
-            left: SceneMetrics.appleEnd.dx - 150,
-            top: SceneMetrics.appleEnd.dy - 60,
-            width: 300,
-            height: 160,
+            left: SceneMetrics.appleEnd.dx - 120,
+            top: SceneMetrics.appleEnd.dy - 100,
+            width: 240,
+            height: 180,
             child: IgnorePointer(
               child: CustomPaint(
                 painter: _DustPainter(progress: state.impactProgress),
@@ -146,47 +146,42 @@ class _DustPainter extends CustomPainter {
 
   final double progress;
 
-  // angle (radians), distance, radius
+  // angle (radians), distance, radius — mostly lateral / upward for a head bonk
   static const List<List<double>> _motes = <List<double>>[
-    <double>[3.35, 120, 13],
-    <double>[3.00, 148, 10],
-    <double>[2.70, 104, 8],
-    <double>[6.10, 132, 12],
-    <double>[6.45, 152, 9],
-    <double>[5.90, 100, 7],
-    <double>[4.71, 64, 9],
+    <double>[3.6, 90, 11],
+    <double>[3.2, 118, 9],
+    <double>[2.9, 86, 7],
+    <double>[5.9, 100, 10],
+    <double>[6.3, 120, 8],
+    <double>[5.6, 78, 6],
+    <double>[4.5, 52, 8],
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
     final double eased = Curves.easeOutCubic.transform(progress);
     final double fade = (1.0 - progress).clamp(0.0, 1.0);
-    final Offset origin = Offset(size.width / 2, size.height * 0.66);
+    // Impact is on a head, not the grass: puff outward and slightly upward.
+    final Offset origin = Offset(size.width / 2, size.height * 0.55);
 
     final Paint paint = Paint()
-      ..color = Palette.dust.withValues(alpha: 0.75 * fade);
+      ..color = Palette.dust.withValues(alpha: 0.7 * fade);
 
     for (final List<double> m in _motes) {
       final double d = m[1] * eased;
       final Offset p = origin +
-          Offset(math.cos(m[0]) * d, math.sin(m[0]) * d * 0.55 - 10 * eased);
+          Offset(math.cos(m[0]) * d, math.sin(m[0]) * d * 0.35 - 28 * eased);
       canvas.drawCircle(p, m[2] * (0.4 + 0.6 * fade), paint);
     }
 
-    // Impact ripple.
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: origin,
-        width: 200 * eased + 40,
-        height: 60 * eased + 16,
-      ),
-      math.pi,
-      math.pi,
-      false,
+    // Soft radial shock around the crown — not a ground splash.
+    canvas.drawCircle(
+      origin,
+      28 + 70 * eased,
       Paint()
-        ..color = Palette.dust.withValues(alpha: 0.5 * fade)
+        ..color = Palette.spark.withValues(alpha: 0.35 * fade)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 5,
+        ..strokeWidth = 4,
     );
   }
 

@@ -13,11 +13,18 @@ library;
 import 'package:flutter/material.dart';
 
 const Color _ink = Color(0xFF23282D);
+const Color _inkSoft = Color(0xFF5B6670);
 const Color _hairline = Color(0xFFDCD8CF);
 const Color _correct = Color(0xFF2F7A52);
 const Color _correctTint = Color(0xFFE4F1E9);
 const Color _wrong = Color(0xFFB03A2E);
 const Color _wrongTint = Color(0xFFFAE7E4);
+
+/// White (or ink, on a light accent such as Heat and Temperature's yellow)
+/// so filled controls stay readable against whichever lesson colour they sit
+/// on.
+Color onAccent(Color accent) =>
+    accent.computeLuminance() > 0.55 ? _ink : Colors.white;
 
 /// Neutral elevation shadow, tuned from the app's existing `kCardShadow`
 /// token (theme/app_theme.dart) rather than a new colour.
@@ -54,9 +61,9 @@ class ElevatedCard extends StatelessWidget {
     required this.color,
     this.padding = const EdgeInsets.fromLTRB(16, 14, 16, 16),
     this.margin,
-    this.radius = 20,
+    this.radius = 22,
     this.borderColor,
-    this.borderWidth = 1,
+    this.borderWidth = 1.5,
     this.elevated = true,
     this.glow,
   });
@@ -80,20 +87,27 @@ class ElevatedCard extends StatelessWidget {
       if (glow != null) ...accentGlow(glow!, strength: 0.55),
       if (elevated) ...elevationShadow(),
     ];
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
+    return Container(
       margin: margin,
-      padding: padding,
       decoration: BoxDecoration(
-        color: color,
         borderRadius: BorderRadius.circular(radius),
-        border: borderColor != null
-            ? Border.all(color: borderColor!, width: borderWidth)
-            : null,
         boxShadow: shadows.isEmpty ? null : shadows,
       ),
-      child: child,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: color,
+            border: borderColor != null
+                ? Border.all(color: borderColor!, width: borderWidth)
+                : null,
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -135,7 +149,7 @@ class _AccentButtonState extends State<AccentButton> {
     final enabled = widget.onPressed != null;
     final accent = widget.accent;
     final darker = Color.lerp(accent, Colors.black, 0.18)!;
-    final fg = widget.filled ? Colors.white : accent;
+    final fg = widget.filled ? onAccent(accent) : accent;
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -152,11 +166,11 @@ class _AccentButtonState extends State<AccentButton> {
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.onPressed,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   gradient: widget.filled
                       ? LinearGradient(
                           begin: Alignment.topLeft,
@@ -165,8 +179,9 @@ class _AccentButtonState extends State<AccentButton> {
                         )
                       : null,
                   color: widget.filled ? null : Colors.white,
-                  border:
-                      widget.filled ? null : Border.all(color: _hairline),
+                  border: widget.filled
+                      ? null
+                      : Border.all(color: _hairline, width: 1.4),
                   boxShadow: widget.filled && enabled
                       ? accentGlow(accent, strength: 0.5)
                       : null,
@@ -179,12 +194,15 @@ class _AccentButtonState extends State<AccentButton> {
                       Icon(widget.icon, size: 18, color: fg),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      widget.label,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: fg,
+                    Flexible(
+                      child: Text(
+                        widget.label,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: fg,
+                        ),
                       ),
                     ),
                   ],
@@ -212,8 +230,8 @@ class SelectableTile extends StatelessWidget {
     required this.feedback,
     required this.accent,
     this.onTap,
-    this.radius = 14,
-    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+    this.radius = 16,
+    this.padding = const EdgeInsets.fromLTRB(12, 12, 14, 12),
   });
 
   final Widget child;
@@ -229,10 +247,10 @@ class SelectableTile extends StatelessWidget {
     final Color border;
     switch (feedback) {
       case TileFeedback.neutral:
-        fill = Colors.white;
-        border = _hairline;
+        fill = const Color(0xFFF7F5F1);
+        border = Colors.transparent;
       case TileFeedback.selected:
-        fill = accent.withValues(alpha: 0.10);
+        fill = accent.withValues(alpha: 0.12);
         border = accent;
       case TileFeedback.correct:
         fill = _correctTint;
@@ -257,7 +275,7 @@ class SelectableTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(
               color: border,
-              width: feedback == TileFeedback.neutral ? 1 : 1.6,
+              width: feedback == TileFeedback.neutral ? 0 : 1.6,
             ),
             boxShadow: feedback == TileFeedback.neutral
                 ? null
@@ -294,7 +312,7 @@ class AnimatedFeedbackIcon extends StatelessWidget {
         opacity: visible ? 1 : 0,
         duration: const Duration(milliseconds: 140),
         child: Icon(
-          correct ? Icons.check_circle : Icons.cancel,
+          correct ? Icons.check_circle_rounded : Icons.cancel_rounded,
           size: size,
           color: correct ? _correct : _wrong,
         ),
@@ -513,6 +531,595 @@ class CaptionCrossfade extends StatelessWidget {
         ),
       ),
       child: KeyedSubtree(key: ValueKey(keyValue), child: child),
+    );
+  }
+}
+
+/// Question index: a squircle badge. [filled] is Cloud Formation's treatment;
+/// Kinetic Theory and Heat and Temperature use the tinted outline so the
+/// three lessons share a primitive without looking identical.
+class NumberBadge extends StatelessWidget {
+  const NumberBadge({
+    super.key,
+    required this.number,
+    required this.accent,
+    this.filled = false,
+    this.size = 32,
+  });
+
+  final int number;
+  final Color accent;
+  final bool filled;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = filled ? onAccent(accent) : accent;
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: filled ? accent : accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: filled ? accentGlow(accent, strength: 0.35) : null,
+      ),
+      child: Text(
+        '$number',
+        style: TextStyle(
+          color: fg,
+          fontSize: size * 0.42,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+/// A / B / C / D marker on a multiple-choice tile. Fills with the tile's
+/// feedback colour so the letter, not a radio icon, is the state signal.
+class LetterBadge extends StatelessWidget {
+  const LetterBadge({
+    super.key,
+    required this.index,
+    required this.feedback,
+    required this.accent,
+  });
+
+  final int index;
+  final TileFeedback feedback;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final letter = String.fromCharCode(65 + index);
+    final Color fill;
+    final Color fg;
+    switch (feedback) {
+      case TileFeedback.neutral:
+        fill = Colors.white;
+        fg = _inkSoft;
+      case TileFeedback.selected:
+        fill = accent;
+        fg = onAccent(accent);
+      case TileFeedback.correct:
+        fill = _correct;
+        fg = Colors.white;
+      case TileFeedback.incorrect:
+        fill = _wrong;
+        fg = Colors.white;
+    }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: feedback == TileFeedback.neutral
+            ? null
+            : elevationShadow(strength: 0.3),
+      ),
+      child: Text(
+        letter,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: fg,
+        ),
+      ),
+    );
+  }
+}
+
+/// Small topic tag sitting above a question prompt.
+class TopicChip extends StatelessWidget {
+  const TopicChip({
+    super.key,
+    required this.label,
+    required this.accent,
+    required this.tint,
+  });
+
+  final String label;
+  final Color accent;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: tint,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          letterSpacing: 0.2,
+          fontWeight: FontWeight.w700,
+          color: accent,
+        ),
+      ),
+    );
+  }
+}
+
+/// Elevated frame around an animation canvas, with the figure caption in a
+/// footer strip rather than as italic text sitting on the paper.
+class FigureFrame extends StatelessWidget {
+  const FigureFrame({
+    super.key,
+    required this.child,
+    required this.caption,
+    required this.accent,
+  });
+
+  final Widget child;
+  final String caption;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedCard(
+      color: Colors.white,
+      glow: accent,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            child: child,
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(22),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'FIG',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: onAccent(accent),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    caption,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      height: 1.4,
+                      color: _inkSoft,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline cloze input: a rounded chip rather than an underlined TextField.
+class BlankChip extends StatelessWidget {
+  const BlankChip({
+    super.key,
+    required this.controller,
+    required this.focusNode,
+    required this.accent,
+    required this.checked,
+    required this.correct,
+    required this.onSubmitted,
+    required this.onChanged,
+    this.width = 148,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final Color accent;
+  final bool checked;
+  final bool correct;
+  final VoidCallback onSubmitted;
+  final VoidCallback onChanged;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color fill;
+    final Color border;
+    final Color text;
+    if (!checked) {
+      fill = accent.withValues(alpha: 0.10);
+      border = accent;
+      text = accent;
+    } else if (correct) {
+      fill = _correctTint;
+      border = _correct;
+      text = _correct;
+    } else {
+      fill = _wrongTint;
+      border = _wrong;
+      text = _wrong;
+    }
+
+    return SizedBox(
+      width: width,
+      child: AnimatedBuilder(
+        animation: focusNode,
+        builder: (context, _) {
+          final focused = focusNode.hasFocus && !checked;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: border,
+                width: focused ? 2 : 1.4,
+              ),
+              boxShadow: focused ? accentGlow(accent, strength: 0.35) : null,
+            ),
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              enabled: !checked,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) => onSubmitted(),
+              onChanged: (_) => onChanged(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w700,
+                color: text,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: '······',
+                hintStyle: TextStyle(
+                  color: _inkSoft,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2,
+                ),
+                contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Hint under a cloze sentence, before marking.
+class HintCallout extends StatelessWidget {
+  const HintCallout({super.key, required this.text, required this.accent});
+
+  final String text;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lightbulb_rounded, size: 16, color: accent),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: _inkSoft,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The correct word, shown under a missed cloze item after marking.
+class RevealRow extends StatelessWidget {
+  const RevealRow({super.key, required this.answer});
+
+  final String answer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: BoxDecoration(
+        color: _wrongTint,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.subdirectory_arrow_right_rounded,
+              size: 16, color: _wrong),
+          const SizedBox(width: 8),
+          Text(
+            'Answer: $answer',
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: _wrong,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact "Watch beat N" chip — a control, not a text link.
+class WatchChip extends StatelessWidget {
+  const WatchChip({
+    super.key,
+    required this.beat,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final int beat;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.play_circle_filled_rounded, size: 16, color: accent),
+              const SizedBox(width: 6),
+              Text(
+                'Watch beat $beat',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One row in the animation tab's beat list.
+class TimelineBeat {
+  const TimelineBeat({
+    required this.kicker,
+    required this.body,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String kicker;
+  final String body;
+  final bool selected;
+  final VoidCallback onTap;
+}
+
+/// Tappable vertical timeline of beats — replaces the plain stacked
+/// `RichText` captions Cloud Formation used to list under the figure.
+class CaptionTimeline extends StatelessWidget {
+  const CaptionTimeline({
+    super.key,
+    required this.beats,
+    required this.accent,
+    required this.tint,
+  });
+
+  final List<TimelineBeat> beats;
+  final Color accent;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < beats.length; i++) ...[
+          _TimelineRow(
+            beat: beats[i],
+            accent: accent,
+            tint: tint,
+            last: i == beats.length - 1,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.beat,
+    required this.accent,
+    required this.tint,
+    required this.last,
+  });
+
+  final TimelineBeat beat;
+  final Color accent;
+  final Color tint;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: beat.onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 22,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: beat.selected ? accent : Colors.white,
+                          border: Border.all(color: accent, width: 2),
+                        ),
+                      ),
+                      if (!last)
+                        Expanded(
+                          child: Container(
+                            width: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 2),
+                            color: accent.withValues(alpha: 0.22),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    decoration: BoxDecoration(
+                      color: beat.selected ? tint : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: beat.selected
+                          ? accentGlow(accent, strength: 0.25)
+                          : elevationShadow(strength: 0.35),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          beat.kicker,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: accent,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          beat.body,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            height: 1.45,
+                            color: _ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Icon tile used in passage headers and score reveals.
+class AccentGlyph extends StatelessWidget {
+  const AccentGlyph({
+    super.key,
+    required this.icon,
+    required this.accent,
+    this.size = 40,
+  });
+
+  final IconData icon;
+  final Color accent;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: accent, size: size * 0.5),
     );
   }
 }

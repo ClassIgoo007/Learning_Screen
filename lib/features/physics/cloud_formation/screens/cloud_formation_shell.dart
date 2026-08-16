@@ -26,8 +26,9 @@ class LessonNavigator extends InheritedWidget {
   bool updateShouldNotify(LessonNavigator oldWidget) => false;
 }
 
-/// Cloud formation worksheet: animation + multiple choice + fill-in-the-blank.
-/// Outer chrome matches the Learning Hub; inner worksheet keeps its paper UI.
+/// Cloud formation worksheet with atmospheric chrome: mist paper, sky header
+/// strip, and top capsule tabs (not a bottom NavigationBar like the lab or
+/// thermal lessons).
 class CloudFormationShell extends StatefulWidget {
   const CloudFormationShell({super.key});
 
@@ -53,6 +54,12 @@ class _CloudFormationShellState extends State<CloudFormationShell> {
     'Part 2 · Fill in',
   ];
 
+  static const _tabs = <(IconData, IconData, String)>[
+    (Icons.cloud_outlined, Icons.cloud_rounded, 'Sky'),
+    (Icons.quiz_outlined, Icons.quiz_rounded, 'Quiz'),
+    (Icons.edit_outlined, Icons.edit_rounded, 'Fill'),
+  ];
+
   @override
   void dispose() {
     _stage.dispose();
@@ -76,15 +83,35 @@ class _CloudFormationShellState extends State<CloudFormationShell> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: Row(
                     children: [
                       const CircleBackButton(),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Palette.slate.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Atmosphere',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Palette.slate,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
                             Text(
                               _titles[_index],
                               style: const TextStyle(
@@ -106,10 +133,33 @@ class _CloudFormationShellState extends State<CloudFormationShell> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _SkyTabStrip(
+                    index: _index,
+                    tabs: _tabs,
+                    onSelect: (i) => setState(() => _index = i),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Expanded(
-                  child: ColoredBox(
-                    color: Palette.paper,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: const BoxDecoration(
+                      color: Palette.paper,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(28),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x14000000),
+                          blurRadius: 18,
+                          offset: Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
                     child: IndexedStack(
                       index: _index,
                       children: [
@@ -120,41 +170,88 @@ class _CloudFormationShellState extends State<CloudFormationShell> {
                     ),
                   ),
                 ),
-                Material(
-                  color: Palette.surface,
-                  elevation: 0,
-                  child: NavigationBar(
-                    selectedIndex: _index,
-                    backgroundColor: Palette.surface,
-                    indicatorColor: Palette.slateTint,
-                    height: 64,
-                    onDestinationSelected: (i) => setState(() => _index = i),
-                    destinations: const [
-                      NavigationDestination(
-                        icon: Icon(Icons.cloud_queue),
-                        selectedIcon:
-                            Icon(Icons.cloud, color: Palette.slate),
-                        label: 'Animation',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.checklist_outlined),
-                        selectedIcon:
-                            Icon(Icons.checklist, color: Palette.slate),
-                        label: 'Questions',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.edit_note_outlined),
-                        selectedIcon:
-                            Icon(Icons.edit_note, color: Palette.slate),
-                        label: 'Blanks',
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Soft capsule tabs along the top — Cloud's signature chrome.
+class _SkyTabStrip extends StatelessWidget {
+  const _SkyTabStrip({
+    required this.index,
+    required this.tabs,
+    required this.onSelect,
+  });
+
+  final int index;
+  final List<(IconData, IconData, String)> tabs;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Palette.hairline),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < tabs.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => onSelect(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: index == i ? Palette.slate : Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: index == i
+                          ? [
+                              BoxShadow(
+                                color: Palette.slate.withValues(alpha: 0.28),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          index == i ? tabs[i].$2 : tabs[i].$1,
+                          size: 18,
+                          color: index == i ? Colors.white : Palette.inkSoft,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          tabs[i].$3,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: index == i ? Colors.white : Palette.inkSoft,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

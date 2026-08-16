@@ -28,9 +28,9 @@ class LessonNavigator extends InheritedWidget {
   bool updateShouldNotify(LessonNavigator oldWidget) => false;
 }
 
-/// Heat and temperature worksheet: animation + multiple choice + fill in +
-/// reference tables. Outer chrome matches the Learning Hub; inner worksheet
-/// keeps its own paper UI, same split as Kinetic Theory and Cloud Formation.
+/// Heat and temperature worksheet with thermal dual-tone chrome: warm peach
+/// paper, hot↔cold header ribbon, and a bottom thermal tab bar — distinct
+/// from Cloud's top sky capsules and Kinetic's lab rail.
 class HeatAndTemperatureShell extends StatefulWidget {
   const HeatAndTemperatureShell({super.key});
 
@@ -59,6 +59,13 @@ class _HeatAndTemperatureShellState extends State<HeatAndTemperatureShell> {
     'Reference tables',
   ];
 
+  static const _tabs = <(IconData, IconData, String)>[
+    (Icons.thermostat_outlined, Icons.thermostat, 'Heat'),
+    (Icons.checklist_outlined, Icons.checklist, 'Quiz'),
+    (Icons.edit_note_outlined, Icons.edit_note, 'Blanks'),
+    (Icons.table_chart_outlined, Icons.table_chart, 'Tables'),
+  ];
+
   @override
   void dispose() {
     _stage.dispose();
@@ -70,7 +77,6 @@ class _HeatAndTemperatureShellState extends State<HeatAndTemperatureShell> {
     setState(() => _index = 0);
   }
 
-  /// Off-screen tabs sit inside a muted ticker, so nothing animates unseen.
   Widget _page(Widget child, bool visible) =>
       TickerMode(enabled: visible, child: child);
 
@@ -86,11 +92,11 @@ class _HeatAndTemperatureShellState extends State<HeatAndTemperatureShell> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: Row(
                     children: [
                       const CircleBackButton(),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,10 +122,21 @@ class _HeatAndTemperatureShellState extends State<HeatAndTemperatureShell> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: _ThermalRibbon(),
+                ),
+                const SizedBox(height: 10),
                 Expanded(
-                  child: ColoredBox(
-                    color: Palette.paper,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Palette.paper,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
                     child: IndexedStack(
                       index: _index,
                       children: [
@@ -137,46 +154,179 @@ class _HeatAndTemperatureShellState extends State<HeatAndTemperatureShell> {
                     ),
                   ),
                 ),
-                Material(
-                  color: Palette.surface,
-                  elevation: 0,
-                  child: NavigationBar(
-                    selectedIndex: _index,
-                    backgroundColor: Palette.surface,
-                    indicatorColor: Palette.slateTint,
-                    height: 64,
-                    onDestinationSelected: (i) => setState(() => _index = i),
-                    destinations: const [
-                      NavigationDestination(
-                        icon: Icon(Icons.thermostat_outlined),
-                        selectedIcon:
-                            Icon(Icons.thermostat, color: Palette.slate),
-                        label: 'Animation',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.checklist_outlined),
-                        selectedIcon:
-                            Icon(Icons.checklist, color: Palette.slate),
-                        label: 'Questions',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.edit_note_outlined),
-                        selectedIcon:
-                            Icon(Icons.edit_note, color: Palette.slate),
-                        label: 'Blanks',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.table_chart_outlined),
-                        selectedIcon:
-                            Icon(Icons.table_chart, color: Palette.slate),
-                        label: 'Tables',
-                      ),
-                    ],
+                _ThermalTabBar(
+                  index: _index,
+                  tabs: _tabs,
+                  onSelect: (i) => setState(() => _index = i),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hot → cold spectrum ribbon under the title.
+class _ThermalRibbon extends StatelessWidget {
+  const _ThermalRibbon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: const LinearGradient(
+          colors: [
+            Palette.hot,
+            Palette.slate,
+            Palette.cold,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Palette.hot.withValues(alpha: 0.22),
+            blurRadius: 10,
+            offset: const Offset(-2, 3),
+          ),
+          BoxShadow(
+            color: Palette.cold.withValues(alpha: 0.22),
+            blurRadius: 10,
+            offset: const Offset(2, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.local_fire_department_rounded,
+                    size: 16, color: Colors.white.withValues(alpha: 0.95)),
+                const SizedBox(width: 4),
+                Text(
+                  'Hot',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white.withValues(alpha: 0.95),
                   ),
                 ),
               ],
             ),
           ),
+          Container(
+            width: 1,
+            height: 18,
+            color: Colors.white.withValues(alpha: 0.35),
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.ac_unit_rounded,
+                    size: 16, color: Colors.white.withValues(alpha: 0.95)),
+                const SizedBox(width: 4),
+                Text(
+                  'Cold',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white.withValues(alpha: 0.95),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom thermal tabs with a hot↔cold underline indicator.
+class _ThermalTabBar extends StatelessWidget {
+  const _ThermalTabBar({
+    required this.index,
+    required this.tabs,
+    required this.onSelect,
+  });
+
+  final int index;
+  final List<(IconData, IconData, String)> tabs;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Palette.surface,
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 3,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Palette.hot, Palette.slate, Palette.cold],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
+              child: Row(
+                children: [
+                  for (var i = 0; i < tabs.length; i++)
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => onSelect(i),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: index == i
+                                      ? Palette.slateTint
+                                      : Colors.transparent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  index == i ? tabs[i].$2 : tabs[i].$1,
+                                  size: 22,
+                                  color: index == i
+                                      ? Palette.ink
+                                      : Palette.inkSoft,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                tabs[i].$3,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: index == i
+                                      ? Palette.ink
+                                      : Palette.inkSoft,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../animation/kinetic_timeline.dart';
 import '../painting/kinetic_painters.dart';
 import '../theme/palette.dart';
@@ -137,7 +138,9 @@ class _AnimationScreenState extends State<AnimationScreen>
                 children: [
                   if (!reduceMotion)
                     ControlPill(
-                      icon: _running ? Icons.pause : Icons.play_arrow,
+                      icon: _running
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       label: _running ? 'Pause' : 'Play',
                       onTap: _togglePlay,
                     ),
@@ -150,58 +153,40 @@ class _AnimationScreenState extends State<AnimationScreen>
                 ],
               ),
               const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                decoration: BoxDecoration(
-                  color: Palette.surface,
-                  borderRadius: BorderRadius.circular(Sizes.cardRadius),
-                  border: Border.all(color: Palette.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RepaintBoundary(
-                      child: vessel
-                          ? ScaledCanvas(
-                              size: VesselMetrics.canvas,
-                              animation: Listenable.merge(
-                                  [_clock, _compression, _heat]),
-                              painterBuilder: () => VesselPainter(
-                                VesselState(
-                                  t: _seconds,
-                                  compression: _compression.value,
-                                  heat: _heat.value,
-                                ),
-                                labelColor: Palette.inkSoft,
-                              ),
-                            )
-                          : ScaledCanvas(
-                              size: ApparatusMetrics.canvas,
-                              animation:
-                                  Listenable.merge([_clock, _agitation]),
-                              painterBuilder: () => ApparatusPainter(
-                                ApparatusState(
-                                  t: _seconds,
-                                  agitation: _agitation.value,
-                                ),
-                                labelColor: Palette.inkSoft,
-                              ),
+              FigureFrame(
+                accent: Palette.slate,
+                caption: vessel
+                    ? '8-8 — the molecules of gas are reflected '
+                        'from the wall and thereby exert a pressure'
+                    : '8-9 — Brown\u2019s apparatus for '
+                        'demonstrating the kinetic theory of gases',
+                child: RepaintBoundary(
+                  child: vessel
+                      ? ScaledCanvas(
+                          size: VesselMetrics.canvas,
+                          animation: Listenable.merge(
+                              [_clock, _compression, _heat]),
+                          painterBuilder: () => VesselPainter(
+                            VesselState(
+                              t: _seconds,
+                              compression: _compression.value,
+                              heat: _heat.value,
                             ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      vessel
-                          ? 'Fig. 8-8 — the molecules of gas are reflected '
-                              'from the wall and thereby exert a pressure'
-                          : 'Fig. 8-9 — Brown\u2019s apparatus for '
-                              'demonstrating the kinetic theory of gases',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontStyle: FontStyle.italic,
-                        color: Palette.inkSoft,
-                      ),
-                    ),
-                  ],
+                            labelColor: Palette.inkSoft,
+                          ),
+                        )
+                      : ScaledCanvas(
+                          size: ApparatusMetrics.canvas,
+                          animation:
+                              Listenable.merge([_clock, _agitation]),
+                          painterBuilder: () => ApparatusPainter(
+                            ApparatusState(
+                              t: _seconds,
+                              agitation: _agitation.value,
+                            ),
+                            labelColor: Palette.inkSoft,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),

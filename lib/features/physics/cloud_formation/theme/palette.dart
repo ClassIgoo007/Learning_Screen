@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 
-/// Every colour used by the worksheet, in one place.
+/// Atmospheric mist palette for the cloud-formation worksheet.
 ///
-/// The palette is drawn from the figure the lesson is built on: warm paper,
-/// slate-blue cloud shadow, amber for the ascending current and rain-blue for
-/// the falling drops.
+/// Cool paper and slate cloud shadow, with amber updraft and rain-blue accents
+/// — deliberately misty and sky-like so it does not read like Kinetic Theory's
+/// violet lab panel or Heat and Temperature's warm thermal paper.
 class Palette {
   const Palette._();
 
-  static const paper = Color(0xFFFBF7F0);
-  static const surface = Color(0xFFFFFFFF);
-  static const passageTint = Color(0xFFEFF3F7);
+  static const paper = Color(0xFFEEF4FA);
+  static const surface = Color(0xFFF7FBFF);
+  static const passageTint = Color(0xFFE4EEF7);
 
-  static const ink = Color(0xFF23282D);
-  static const inkSoft = Color(0xFF5B6670);
-  static const hairline = Color(0xFFDCD8CF);
+  static const ink = Color(0xFF1E2A36);
+  static const inkSoft = Color(0xFF5A6B7A);
+  static const hairline = Color(0xFFC9D6E3);
 
   static const slate = Color(0xFF2F5D8C);
-  static const slateTint = Color(0xFFE3ECF5);
+  static const slateTint = Color(0xFFD9E6F3);
 
   static const updraft = Color(0xFFC97A16);
   static const updraftTint = Color(0xFFFBEEDA);
@@ -33,9 +33,7 @@ class Palette {
 class Sizes {
   const Sizes._();
 
-  /// Content never grows wider than this, so the worksheet keeps a readable
-  /// measure on tablets and desktop while filling a phone edge to edge.
   static const maxContentWidth = 720.0;
   static const gutter = 20.0;
-  static const cardRadius = 14.0;
+  static const cardRadius = 26.0;
 }

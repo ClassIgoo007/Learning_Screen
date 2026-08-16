@@ -99,7 +99,7 @@ class _BlankScreenState extends State<BlankScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     PassageCard(passage: widget.lesson.passageTwo),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     ProgressHeader(
                       label: 'Complete each sentence',
                       answered: _controllers
@@ -178,11 +178,6 @@ class _ClozeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final correct = item.isCorrect(controller.text);
-    final border = !checked
-        ? Palette.hairline
-        : correct
-            ? Palette.correct.withValues(alpha: 0.5)
-            : Palette.wrong.withValues(alpha: 0.5);
 
     const sentenceStyle = TextStyle(
       fontSize: 15.5,
@@ -192,46 +187,33 @@ class _ClozeCard extends StatelessWidget {
 
     return ElevatedCard(
       color: Palette.surface,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      borderColor: border,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      borderColor: !checked
+          ? null
+          : correct
+              ? Palette.correct.withValues(alpha: 0.45)
+              : Palette.wrong.withValues(alpha: 0.45),
+      glow: checked ? (correct ? Palette.correct : Palette.wrong) : null,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // An outlined ring, matching the Choice screen's number chip —
-          // Cloud Formation uses a filled rounded-square here instead.
-          Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: Palette.surface,
-              shape: BoxShape.circle,
-              border: Border.all(color: Palette.slate, width: 1.6),
-            ),
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: Palette.slate,
-              ),
-            ),
+          NumberBadge(
+            number: index + 1,
+            accent: Palette.slate,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // The sentence flows as one wrapping line of text with the
-                // input embedded in it, so the blank sits where the word would.
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text('${item.before} ', style: sentenceStyle),
-                    _BlankField(
+                    BlankChip(
                       controller: controller,
                       focusNode: focusNode,
+                      accent: Palette.slate,
                       checked: checked,
                       correct: correct,
                       onSubmitted: onSubmitted,
@@ -241,118 +223,22 @@ class _ClozeCard extends StatelessWidget {
                   ],
                 ),
                 if (item.hint != null && !checked) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.lightbulb_outline,
-                          size: 14, color: Palette.updraft),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          item.hint!,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontStyle: FontStyle.italic,
-                            color: Palette.inkSoft,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 10),
+                  HintCallout(text: item.hint!, accent: Palette.updraft),
                 ],
                 if (checked) WatchBeatLink(beat: item.beat),
                 if (checked && !correct) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.subdirectory_arrow_right,
-                          size: 15, color: Palette.wrong),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Answer: ${item.answer}',
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: Palette.wrong,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 10),
+                  RevealRow(answer: item.answer),
                 ],
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 8, top: 6),
+            padding: const EdgeInsets.only(left: 8, top: 4),
             child: AnimatedFeedbackIcon(correct: correct, visible: checked),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// The blank itself: an underlined field sized to sit inline with the sentence.
-class _BlankField extends StatelessWidget {
-  const _BlankField({
-    required this.controller,
-    required this.focusNode,
-    required this.checked,
-    required this.correct,
-    required this.onSubmitted,
-    required this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool checked;
-  final bool correct;
-  final VoidCallback onSubmitted;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = !checked
-        ? Palette.slate
-        : correct
-            ? Palette.correct
-            : Palette.wrong;
-
-    return SizedBox(
-      width: 132,
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        enabled: !checked,
-        textInputAction: TextInputAction.next,
-        onSubmitted: (_) => onSubmitted(),
-        onChanged: (_) => onChanged(),
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 15.5,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: '. . . . . .',
-          hintStyle: const TextStyle(
-            color: Palette.inkSoft,
-            fontWeight: FontWeight.w400,
-            letterSpacing: 1,
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 6),
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: color.withValues(alpha: 0.5), width: 1.4),
-          ),
-          disabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: color, width: 1.4),
-          ),
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: color, width: 2),
-          ),
-        ),
       ),
     );
   }

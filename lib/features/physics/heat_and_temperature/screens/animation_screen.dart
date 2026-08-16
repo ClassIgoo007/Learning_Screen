@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/modern_kit.dart';
 import '../animation/cryo_timeline.dart';
 import '../painting/cryo_painters.dart';
 import '../painting/plasma_painters.dart';
@@ -147,6 +148,58 @@ class _AnimationScreenState extends State<AnimationScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Figure leads — Kinetic puts controls first; Cloud leads with
+              // sky + timeline. Heat opens on the apparatus itself.
+              FigureFrame(
+                accent: apparatus ? Palette.cold : Palette.hot,
+                caption: apparatus
+                    ? '4-9 — the gas heated by compression in the '
+                        'upper chamber loses heat to the surroundings, '
+                        'while the gas cooled by expansion in the lower '
+                        'chamber absorbs heat from them'
+                    : '4-8 — a plasma jet produced by blowing a '
+                        'stream of noble gas through a high-current '
+                        'electric arc discharge',
+                child: Semantics(
+                  label: apparatus
+                      ? 'Diagram of a cryogenic apparatus. A compressor '
+                          'driven by an electric motor pumps gas into an '
+                          'upper compression chamber, which loses heat to '
+                          'the surroundings, and a valve releases it into '
+                          'a lower expansion chamber, which absorbs heat.'
+                      : 'Diagram of a plasma torch. Noble gas is blown '
+                          'through a high-current arc and leaves the '
+                          'nozzle as a jet, with a temperature scale '
+                          'alongside.',
+                  child: RepaintBoundary(
+                    child: apparatus
+                        ? ScaledCanvas(
+                            size: CryoMetrics.canvas,
+                            animation: Listenable.merge(
+                                [_clock, _cycle, _manualValve]),
+                            painterBuilder: () => CryogenicPainter(
+                              CryoState(
+                                  t: _clock.value, stage: _effectiveStage),
+                              labelColor: Palette.inkSoft,
+                            ),
+                            onTap: _handleApparatusTap,
+                          )
+                        : ScaledCanvas(
+                            size: PlasmaMetrics.canvas,
+                            animation:
+                                Listenable.merge([_clock, _intensity]),
+                            painterBuilder: () => PlasmaPainter(
+                              PlasmaState(
+                                t: _clock.value,
+                                intensity: _intensity.value,
+                              ),
+                              labelColor: Palette.inkSoft,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
               SegmentedPicker(
                 left: 'Cryogenic cycle · 4-9',
                 right: 'Plasma jet · 4-8',
@@ -154,92 +207,35 @@ class _AnimationScreenState extends State<AnimationScreen>
                 onLeft: () => _select(CryoStage.compression),
                 onRight: () => _select(CryoStage.plasmaJet),
               ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                decoration: BoxDecoration(
-                  color: Palette.surface,
-                  borderRadius: BorderRadius.circular(Sizes.cardRadius),
-                  border: Border.all(color: Palette.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Semantics(
-                      label: apparatus
-                          ? 'Diagram of a cryogenic apparatus. A compressor '
-                              'driven by an electric motor pumps gas into an '
-                              'upper compression chamber, which loses heat to '
-                              'the surroundings, and a valve releases it into '
-                              'a lower expansion chamber, which absorbs heat.'
-                          : 'Diagram of a plasma torch. Noble gas is blown '
-                              'through a high-current arc and leaves the '
-                              'nozzle as a jet, with a temperature scale '
-                              'alongside.',
-                      child: RepaintBoundary(
-                        child: apparatus
-                            ? ScaledCanvas(
-                                size: CryoMetrics.canvas,
-                                animation: Listenable.merge(
-                                    [_clock, _cycle, _manualValve]),
-                                painterBuilder: () => CryogenicPainter(
-                                  CryoState(
-                                      t: _clock.value, stage: _effectiveStage),
-                                  labelColor: Palette.inkSoft,
-                                ),
-                                onTap: _handleApparatusTap,
-                              )
-                            : ScaledCanvas(
-                                size: PlasmaMetrics.canvas,
-                                animation:
-                                    Listenable.merge([_clock, _intensity]),
-                                painterBuilder: () => PlasmaPainter(
-                                  PlasmaState(
-                                    t: _clock.value,
-                                    intensity: _intensity.value,
-                                  ),
-                                  labelColor: Palette.inkSoft,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      apparatus
-                          ? 'Fig. 4-9 — the gas heated by compression in the '
-                              'upper chamber loses heat to the surroundings, '
-                              'while the gas cooled by expansion in the lower '
-                              'chamber absorbs heat from them'
-                          : 'Fig. 4-8 — a plasma jet produced by blowing a '
-                              'stream of noble gas through a high-current '
-                              'electric arc discharge',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontStyle: FontStyle.italic,
-                        color: Palette.inkSoft,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              const SizedBox(height: 12),
+              Row(
                 children: [
                   if (!reduceMotion)
                     ControlPill(
-                      icon: _running ? Icons.pause : Icons.play_arrow,
+                      icon: _running
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       label: _running ? 'Pause' : 'Play',
                       onTap: _togglePlay,
                     ),
-                  for (final s in beats)
-                    ControlPill(
-                      label: '${s.beat} · ${s.label}',
-                      selected: s == _stage,
-                      onTap: () => _select(s),
+                  if (!reduceMotion) const SizedBox(width: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < beats.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            ControlPill(
+                              label: '${beats[i].beat} · ${beats[i].label}',
+                              selected: beats[i] == _stage,
+                              onTap: () => _select(beats[i]),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),

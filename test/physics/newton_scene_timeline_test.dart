@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phonics_worksheets/features/physics/newtons_apple/animation/scene_metrics.dart';
 import 'package:phonics_worksheets/features/physics/newtons_apple/animation/scene_timeline.dart';
 
 void main() {
@@ -74,6 +75,39 @@ void main() {
         expect(stage.title, isNotEmpty);
         expect(stage.description.length, greaterThan(30));
       }
+    });
+  });
+
+  group('apple lands on Newton\'s head', () {
+    test('rest point sits on the crown, not on the grass', () {
+      final Offset end = SceneMetrics.appleEnd;
+      final Offset crown = SceneMetrics.crownTop;
+
+      // Horizontally centred on the head.
+      expect(end.dx, closeTo(crown.dx, 1));
+
+      // Bottom of the apple touches the crown (with a small nestle).
+      final double appleBottom = end.dy + SceneMetrics.appleRadius;
+      expect(appleBottom, closeTo(crown.dy + 10, 2));
+
+      // Well above the grass line (~0.85 of the canvas).
+      expect(end.dy, lessThan(SceneMetrics.canvas.height * 0.65));
+    });
+
+    test('the fall finishes at the head landing point', () {
+      final SceneState landed = SceneState.fromProgress(SceneTiming.fallEnd);
+      expect(SceneMetrics.appleX(landed.appleDrop),
+          closeTo(SceneMetrics.appleEnd.dx, 0.5));
+      expect(SceneMetrics.appleY(landed.appleDrop),
+          closeTo(SceneMetrics.appleEnd.dy, 0.5));
+    });
+
+    test('the apple starts higher than the head so the drop is visible', () {
+      expect(SceneMetrics.appleStart.dy, lessThan(SceneMetrics.appleEnd.dy));
+      expect(
+        SceneMetrics.appleEnd.dy - SceneMetrics.appleStart.dy,
+        greaterThan(100),
+      );
     });
   });
 }

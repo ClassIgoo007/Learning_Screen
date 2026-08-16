@@ -60,7 +60,7 @@ class _ChoiceScreenState extends State<ChoiceScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     PassageCard(passage: widget.lesson.passageOne),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     ProgressHeader(
                       label: 'Choose the best answer',
                       answered: _selected.length,
@@ -70,7 +70,7 @@ class _ChoiceScreenState extends State<ChoiceScreen> {
                       const SizedBox(height: 12),
                       ScoreBanner(score: _score, total: _questions.length),
                     ],
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     for (var i = 0; i < _questions.length; i++) ...[
                       EntranceFade(
                         delay: Duration(milliseconds: 40 * i),
@@ -85,7 +85,7 @@ class _ChoiceScreenState extends State<ChoiceScreen> {
                                   setState(() => _selected[i] = value),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                     ],
                   ],
                 ),
@@ -125,33 +125,41 @@ class _QuestionCard extends StatelessWidget {
 
     return ElevatedCard(
       color: Palette.surface,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       borderColor: !checked
-          ? Palette.hairline
+          ? null
           : correct
-              ? Palette.correct.withValues(alpha: 0.5)
-              : Palette.wrong.withValues(alpha: 0.5),
+              ? Palette.correct.withValues(alpha: 0.45)
+              : Palette.wrong.withValues(alpha: 0.45),
+      glow: checked ? (correct ? Palette.correct : Palette.wrong) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NumberChip(index + 1),
-              const SizedBox(width: 10),
+              NumberBadge(
+                number: index + 1,
+                accent: Palette.slate,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _TopicPill(question.topic),
-                    const SizedBox(height: 6),
+                    TopicChip(
+                      label: question.topic,
+                      accent: Palette.accent,
+                      tint: Palette.accentTint,
+                    ),
+                    const SizedBox(height: 8),
                     Text(
                       question.prompt,
                       style: const TextStyle(
-                        fontSize: 15.5,
-                        height: 1.45,
+                        fontSize: 16,
+                        height: 1.4,
                         color: Palette.ink,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -163,14 +171,17 @@ class _QuestionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          for (final choice in question.choices)
+          const SizedBox(height: 14),
+          for (var c = 0; c < question.choices.length; c++)
             _ChoiceTile(
-              label: choice,
-              isSelected: selected == choice,
-              isAnswer: question.answer == choice,
+              index: c,
+              label: question.choices[c],
+              isSelected: selected == question.choices[c],
+              isAnswer: question.answer == question.choices[c],
               checked: checked,
-              onTap: onSelect == null ? null : () => onSelect!(choice),
+              onTap: onSelect == null
+                  ? null
+                  : () => onSelect!(question.choices[c]),
             ),
           if (checked) WatchBeatLink(beat: question.beat),
         ],
@@ -181,6 +192,7 @@ class _QuestionCard extends StatelessWidget {
 
 class _ChoiceTile extends StatelessWidget {
   const _ChoiceTile({
+    required this.index,
     required this.label,
     required this.isSelected,
     required this.isAnswer,
@@ -188,6 +200,7 @@ class _ChoiceTile extends StatelessWidget {
     required this.onTap,
   });
 
+  final int index;
   final String label;
   final bool isSelected;
   final bool isAnswer;
@@ -213,7 +226,7 @@ class _ChoiceTile extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.only(bottom: 8),
       child: SelectableTile(
         feedback: feedback,
         accent: Palette.slate,
@@ -221,14 +234,12 @@ class _ChoiceTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              size: 18,
-              color: isSelected ? text : Palette.inkSoft,
+            LetterBadge(
+              index: index,
+              feedback: feedback,
+              accent: Palette.slate,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
@@ -236,68 +247,11 @@ class _ChoiceTile extends StatelessWidget {
                   fontSize: 14.5,
                   height: 1.4,
                   color: text,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// An outlined ring, matching Kinetic Theory's numbering treatment — same
-/// primitive, different fill, so the app's two data-driven worksheets read as
-/// siblings even though their accent colours differ.
-class _NumberChip extends StatelessWidget {
-  const _NumberChip(this.number);
-
-  final int number;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 26,
-      height: 26,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Palette.surface,
-        shape: BoxShape.circle,
-        border: Border.all(color: Palette.slate, width: 1.6),
-      ),
-      child: Text(
-        '$number',
-        style: const TextStyle(
-          color: Palette.slate,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _TopicPill extends StatelessWidget {
-  const _TopicPill(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-      decoration: BoxDecoration(
-        color: Palette.accentTint,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 10.5,
-          letterSpacing: 0.9,
-          fontWeight: FontWeight.w600,
-          color: Palette.accent,
         ),
       ),
     );
