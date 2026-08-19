@@ -12,6 +12,11 @@ abstract final class SceneTiming {
   static const Duration total = Duration(milliseconds: 9500);
 
   static const double hangEnd = 0.16;
+
+  /// Last ~400 ms of the hang beat: the apple stays still on the stem before
+  /// it lets go (see [SceneState.stemAttached]).
+  static const double hangPause = 0.042;
+
   static const double fallEnd = 0.40;
   static const double settleEnd = 0.54;
   static const double reactEnd = 0.66;
@@ -78,7 +83,7 @@ class SceneState {
     required this.appleDrop,
     required this.appleScaleX,
     required this.appleScaleY,
-    required this.appleSway,
+    required this.stemAttached,
     required this.trailOpacity,
     required this.impactProgress,
     required this.surprise,
@@ -99,8 +104,8 @@ class SceneState {
   final double appleScaleX;
   final double appleScaleY;
 
-  /// Gentle pre-release rotation of the hanging apple, in radians.
-  final double appleSway;
+  /// True while the apple is still hanging from the branch (stem visible).
+  final bool stemAttached;
 
   /// Opacity of the speed lines behind the falling apple.
   final double trailOpacity;
@@ -124,7 +129,6 @@ class SceneState {
   factory SceneState.fromProgress(double rawProgress) {
     final double t = rawProgress.clamp(0.0, 1.0);
 
-    final double hang = _segment(t, 0.0, SceneTiming.hangEnd);
     final double fall = _segment(t, SceneTiming.hangEnd, SceneTiming.fallEnd);
     final double settle =
         _segment(t, SceneTiming.fallEnd, SceneTiming.settleEnd);
@@ -179,10 +183,7 @@ class SceneState {
       appleDrop: drop,
       appleScaleX: scaleX,
       appleScaleY: scaleY,
-      // Wobble builds while it hangs, then stops the instant it lets go.
-      appleSway: fall > 0.0
-          ? 0.0
-          : math.sin(hang * math.pi * 6.0) * 0.05 * (0.35 + hang * 0.65),
+      stemAttached: t < SceneTiming.hangEnd,
       trailOpacity: (fall * 3.0).clamp(0.0, 1.0) * (1.0 - settle),
       impactProgress: settle,
       surprise: react,
@@ -199,7 +200,7 @@ class SceneState {
           other.appleDrop == appleDrop &&
           other.appleScaleX == appleScaleX &&
           other.appleScaleY == appleScaleY &&
-          other.appleSway == appleSway &&
+          other.stemAttached == stemAttached &&
           other.trailOpacity == trailOpacity &&
           other.impactProgress == impactProgress &&
           other.surprise == surprise &&
@@ -212,7 +213,7 @@ class SceneState {
         appleDrop,
         appleScaleX,
         appleScaleY,
-        appleSway,
+        stemAttached,
         trailOpacity,
         impactProgress,
         surprise,

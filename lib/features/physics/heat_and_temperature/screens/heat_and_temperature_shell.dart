@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/common.dart';
+import '../../../../services/openai_service.dart';
 import '../animation/cryo_timeline.dart';
 import '../data/lesson_data.dart';
 import '../theme/palette.dart';
@@ -32,7 +33,9 @@ class LessonNavigator extends InheritedWidget {
 /// paper, hot↔cold header ribbon, and a bottom thermal tab bar — distinct
 /// from Cloud's top sky capsules and Kinetic's lab rail.
 class HeatAndTemperatureShell extends StatefulWidget {
-  const HeatAndTemperatureShell({super.key});
+  const HeatAndTemperatureShell({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   State<HeatAndTemperatureShell> createState() =>
@@ -142,11 +145,17 @@ class _HeatAndTemperatureShellState extends State<HeatAndTemperatureShell> {
                       children: [
                         _page(AnimationScreen(stage: _stage), _index == 0),
                         _page(
-                          const ChoiceScreen(lesson: kCryogenicsLesson),
+                          ChoiceScreen(
+                            lesson: kCryogenicsLesson,
+                            openAI: widget.openAI,
+                          ),
                           _index == 1,
                         ),
                         _page(
-                          const BlankScreen(lesson: kCryogenicsLesson),
+                          BlankScreen(
+                            lesson: kCryogenicsLesson,
+                            openAI: widget.openAI,
+                          ),
                           _index == 2,
                         ),
                         _page(const TableScreen(), _index == 3),

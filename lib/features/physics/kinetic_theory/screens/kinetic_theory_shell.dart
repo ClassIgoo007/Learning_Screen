@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/common.dart';
+import '../../../../services/openai_service.dart';
 import '../animation/kinetic_timeline.dart';
 import '../data/lesson_data.dart';
 import '../theme/palette.dart';
@@ -31,7 +32,9 @@ class LessonNavigator extends InheritedWidget {
 /// denser paper, and a bottom icon rail — not Cloud's top capsules or Heat's
 /// thermal dual-tone bar.
 class KineticTheoryShell extends StatefulWidget {
-  const KineticTheoryShell({super.key});
+  const KineticTheoryShell({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   State<KineticTheoryShell> createState() => _KineticTheoryShellState();
@@ -186,11 +189,17 @@ class _KineticTheoryShellState extends State<KineticTheoryShell> {
                                   _index == 0,
                                 ),
                                 _page(
-                                  const ChoiceScreen(lesson: kKineticLesson),
+                                  ChoiceScreen(
+                                    lesson: kKineticLesson,
+                                    openAI: widget.openAI,
+                                  ),
                                   _index == 1,
                                 ),
                                 _page(
-                                  const BlankScreen(lesson: kKineticLesson),
+                                  BlankScreen(
+                                    lesson: kKineticLesson,
+                                    openAI: widget.openAI,
+                                  ),
                                   _index == 2,
                                 ),
                               ],

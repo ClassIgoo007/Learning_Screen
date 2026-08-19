@@ -63,7 +63,7 @@ class FallingApple extends StatelessWidget {
               painter: _ApplePainter(
                 scaleX: state.appleScaleX,
                 scaleY: state.appleScaleY,
-                rotation: state.appleSway,
+                stem: state.stemAttached,
               ),
             ),
           ),
@@ -77,12 +77,12 @@ class _ApplePainter extends CustomPainter {
   const _ApplePainter({
     required this.scaleX,
     required this.scaleY,
-    required this.rotation,
+    required this.stem,
   });
 
   final double scaleX;
   final double scaleY;
-  final double rotation;
+  final bool stem;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -98,7 +98,7 @@ class _ApplePainter extends CustomPainter {
       SceneMetrics.appleRadius,
       scaleX: scaleX,
       scaleY: scaleY,
-      rotation: rotation,
+      stem: stem,
     );
   }
 
@@ -106,7 +106,7 @@ class _ApplePainter extends CustomPainter {
   bool shouldRepaint(_ApplePainter oldDelegate) =>
       oldDelegate.scaleX != scaleX ||
       oldDelegate.scaleY != scaleY ||
-      oldDelegate.rotation != rotation;
+      oldDelegate.stem != stem;
 }
 
 class _TrailPainter extends CustomPainter {

@@ -26,10 +26,13 @@ abstract final class SceneMetrics {
     return Offset(centre.dx, centre.dy - _crownRadius);
   }
 
-  /// Where the apple hangs before it lets go — high enough above Newton that
-  /// the drop onto his head reads as a real fall, not a sideways slide.
-  /// Sits under the mid-section of the low branch in apple_tree.dart.
-  static const Offset appleStart = Offset(360, 520);
+  /// Horizontal centre of the fall — locked to Newton's crown for a vertical
+  /// drop with no sideways drift.
+  static double get appleXCenter => crownTop.dx;
+
+  /// Where the apple hangs before it lets go — directly above the crown on the
+  /// low branch (see apple_tree.dart).
+  static Offset get appleStart => Offset(appleXCenter, 520);
 
   /// Where the apple comes to rest: perched on Newton's crown (bottom of the
   /// fruit nestles a few pixels into the hair), never on the grass.
@@ -51,9 +54,6 @@ abstract final class SceneMetrics {
   static double appleY(double drop) =>
       appleStart.dy + (appleEnd.dy - appleStart.dy) * drop;
 
-  /// The apple travels sideways from the branch to Newton's head as it
-  /// falls, using the same [drop] progress as [appleY] so the path traced is
-  /// a straight line between the two points.
-  static double appleX(double drop) =>
-      appleStart.dx + (appleEnd.dx - appleStart.dx) * drop;
+  /// The apple falls straight down — x stays fixed from release to landing.
+  static double appleX(double drop) => appleXCenter;
 }

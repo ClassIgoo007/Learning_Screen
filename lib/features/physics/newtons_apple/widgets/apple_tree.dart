@@ -127,19 +127,19 @@ class _AppleTreePainter extends CustomPainter {
     );
 
     // Low branch that carries the apple which is about to fall.
-    // Tip curves toward SceneMetrics.appleStart (360, 520).
+    // Tip curves toward SceneMetrics.appleStart (centred above Newton's head).
     limb.strokeWidth = 30;
     canvas.drawPath(
       Path()
         ..moveTo(614, 662)
-        ..cubicTo(500, 596, 420, 560, 360, 520),
+        ..cubicTo(620, 600, 650, 550, 668, 520),
       limb,
     );
     limb.strokeWidth = 18;
     canvas.drawPath(
       Path()
-        ..moveTo(430, 580)
-        ..quadraticBezierTo(392, 540, 344, 510),
+        ..moveTo(580, 620)
+        ..quadraticBezierTo(630, 560, 668, 510),
       limb,
     );
   }
