@@ -14,6 +14,17 @@ void main() {
       expect(SceneState.fromProgress(SceneTiming.hangEnd - 0.01).appleDrop, 0.0);
     });
 
+    test('the stem detaches when free fall begins', () {
+      expect(
+        SceneState.fromProgress(SceneTiming.hangEnd - 0.001).stemAttached,
+        isTrue,
+      );
+      expect(
+        SceneState.fromProgress(SceneTiming.hangEnd + 0.001).stemAttached,
+        isFalse,
+      );
+    });
+
     test('the apple accelerates: later intervals cover more ground', () {
       const double span = SceneTiming.fallEnd - SceneTiming.hangEnd;
       final double firstThird =
@@ -100,6 +111,31 @@ void main() {
           closeTo(SceneMetrics.appleEnd.dx, 0.5));
       expect(SceneMetrics.appleY(landed.appleDrop),
           closeTo(SceneMetrics.appleEnd.dy, 0.5));
+    });
+
+    test('the fall is strictly vertical', () {
+      expect(SceneMetrics.appleStart.dx, closeTo(SceneMetrics.appleEnd.dx, 0.5));
+      for (final double drop in <double>[0.0, 0.25, 0.5, 0.75, 1.0]) {
+        expect(
+          SceneMetrics.appleX(drop),
+          closeTo(SceneMetrics.appleEnd.dx, 0.5),
+        );
+      }
+    });
+
+    test('the stem stays attached until the fall begins', () {
+      expect(
+        SceneState.fromProgress(SceneTiming.hangEnd - 0.001).stemAttached,
+        isTrue,
+      );
+      expect(
+        SceneState.fromProgress(SceneTiming.hangEnd).stemAttached,
+        isFalse,
+      );
+    });
+
+    test('the apple starts directly above the crown', () {
+      expect(SceneMetrics.appleStart.dx, closeTo(SceneMetrics.crownTop.dx, 0.5));
     });
 
     test('the apple starts higher than the head so the drop is visible', () {

@@ -146,8 +146,9 @@ class VesselPainter extends CustomPainter {
 
   /// A hotter gas doesn't just hit the wall more often — each hit lands
   /// harder. [state.speed] (1 at rest, up to 1.85 at full heat) drives the
-  /// burst wider, thicker and busier, so Beat 3's impacts read as visibly
-  /// more violent without compression alone (Beat 2) changing them at all.
+  /// burst wider, thicker and busier. Compression alone (Beat 2) leaves
+  /// impact size unchanged — only the shorter path raises how often they
+  /// appear, which is what higher pressure at constant temperature means.
   void _paintImpact(Canvas canvas, Offset p) {
     const margin = 26.0;
     final atWall = p.dx < VesselMetrics.left + margin ||
@@ -159,6 +160,10 @@ class VesselPainter extends CustomPainter {
     final force = (state.speed - 1) / 0.85; // 0 at rest .. 1 at full heat
     final reach = 15.0 + 6.0 * force;
     final rayCount = force > 0.5 ? 8 : 6;
+    // Slightly brighter at the wall when the vessel is small — more transits
+    // per second, not harder hits from temperature.
+    final densityBoost =
+        ((1 / state.volumeFraction) - 1).clamp(0.0, 1.0) * 0.25;
 
     canvas.drawPath(
       dashPath(
@@ -168,13 +173,13 @@ class VesselPainter extends CustomPainter {
         0,
       ),
       Paint()
-        ..color = _impact.withValues(alpha: 0.5)
+        ..color = _impact.withValues(alpha: 0.5 + densityBoost)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.3,
     );
 
     final ray = Paint()
-      ..color = _impact.withValues(alpha: 0.85)
+      ..color = _impact.withValues(alpha: 0.85 + densityBoost)
       ..strokeWidth = 2.5 + 1.5 * force
       ..strokeCap = StrokeCap.round;
     for (var i = 0; i < rayCount; i++) {
@@ -199,9 +204,9 @@ class VesselPainter extends CustomPainter {
       track,
     );
 
-    // The scale runs from nothing to four times the relaxed, cold pressure,
-    // so the resting state still reads a quarter full.
-    final fill = (state.pressure / 4).clamp(0.0, 1.0) * height;
+    // Scale tops out at three times the relaxed, cold pressure so Beat 2's
+    // isothermal squeeze (p ∝ 1/V) reads clearly on the bar.
+    final fill = (state.pressure / 3).clamp(0.0, 1.0) * height;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(x, top + height - fill, 26, fill),

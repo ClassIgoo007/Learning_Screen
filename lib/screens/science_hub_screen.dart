@@ -42,7 +42,7 @@ class ScienceHubScreen extends StatelessWidget {
           icon: Icons.bolt_rounded,
           color: const Color(0xFF5C6BC0),
           image: 'assets/sec_physics.png',
-          builder: (_) => const PhysicsHubScreen(),
+          builder: (_) => PhysicsHubScreen(openAI: openAI),
         ),
         HubCardItem(
           title: 'Chemistry',
@@ -95,7 +95,9 @@ class BiologyHubScreen extends StatelessWidget {
 
 /// Physics catalog — interactive labs and quizzes.
 class PhysicsHubScreen extends StatelessWidget {
-  const PhysicsHubScreen({super.key});
+  const PhysicsHubScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +117,7 @@ class PhysicsHubScreen extends StatelessWidget {
           icon: Icons.water_drop_rounded,
           color: const Color(0xFF5C6BC0),
           image: 'assets/sec_physics.png',
-          builder: (_) => const BernoulliHomeScreen(),
+          builder: (_) => BernoulliHomeScreen(openAI: openAI),
         ),
         HubCardItem(
           title: "Newton's Apple",
@@ -133,7 +135,7 @@ class PhysicsHubScreen extends StatelessWidget {
           icon: Icons.cloud_rounded,
           color: const Color(0xFF0288D1),
           image: 'assets/cloud_formation_preview.png',
-          builder: (_) => const CloudFormationShell(),
+          builder: (_) => CloudFormationShell(openAI: openAI),
         ),
         HubCardItem(
           title: 'Kinetic Theory of Gases',
@@ -142,7 +144,7 @@ class PhysicsHubScreen extends StatelessWidget {
           icon: Icons.scatter_plot_rounded,
           color: AppColors.violet,
           image: 'assets/kinetic_theory_thumbnail.png',
-          builder: (_) => const KineticTheoryShell(),
+          builder: (_) => KineticTheoryShell(openAI: openAI),
         ),
         HubCardItem(
           title: 'Heat and Temperature',
@@ -151,7 +153,7 @@ class PhysicsHubScreen extends StatelessWidget {
           icon: Icons.thermostat_rounded,
           color: AppColors.yellow,
           image: 'assets/heat_temperature_preview.png',
-          builder: (_) => const HeatAndTemperatureShell(),
+          builder: (_) => HeatAndTemperatureShell(openAI: openAI),
         ),
       ],
     );

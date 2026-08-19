@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../services/openai_service.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/common.dart';
 import '../models/content.dart';
@@ -12,7 +13,9 @@ import 'bernoulli_simulation_screen.dart';
 
 /// Physics topic home for Bernoulli / Venturi, matching Learning Hub chrome.
 class BernoulliHomeScreen extends StatelessWidget {
-  const BernoulliHomeScreen({super.key});
+  const BernoulliHomeScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +115,8 @@ class BernoulliHomeScreen extends StatelessWidget {
                               colour: BernoulliColors.motion,
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => const BernoulliQuizScreen(),
+                                  builder: (_) =>
+                                      BernoulliQuizScreen(openAI: openAI),
                                 ),
                               ),
                             ),

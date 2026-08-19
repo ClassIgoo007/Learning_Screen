@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../services/openai_service.dart';
+import '../../shared/lesson_action_bar.dart';
 import '../../shared/modern_kit.dart';
+import '../../shared/physics_ai.dart';
+import '../../shared/ai_mapping.dart';
 import '../models/lesson.dart';
 import '../theme/palette.dart';
 import '../widgets/common.dart';
@@ -8,24 +12,34 @@ import '../widgets/common.dart';
 /// Screen 2 — read the second passage, then complete each sentence by typing
 /// the missing word into the blank.
 class BlankScreen extends StatefulWidget {
-  const BlankScreen({super.key, required this.lesson});
+  const BlankScreen({
+    super.key,
+    required this.lesson,
+    required this.openAI,
+  });
 
   final Lesson lesson;
+  final OpenAIService openAI;
 
   @override
   State<BlankScreen> createState() => _BlankScreenState();
 }
 
 class _BlankScreenState extends State<BlankScreen> {
-  late final List<TextEditingController> _controllers;
-  late final List<FocusNode> _focusNodes;
+  late List<TextEditingController> _controllers;
+  late List<FocusNode> _focusNodes;
   bool _checked = false;
-
-  List<ClozeSentence> get _items => widget.lesson.clozeSentences;
+  bool _generating = false;
+  late List<ClozeSentence> _items;
 
   @override
   void initState() {
     super.initState();
+    _items = List<ClozeSentence>.from(widget.lesson.clozeSentences);
+    _initFields();
+  }
+
+  void _initFields() {
     _controllers =
         List.generate(_items.length, (_) => TextEditingController());
     _focusNodes = List.generate(_items.length, (_) => FocusNode());
@@ -33,13 +47,17 @@ class _BlankScreenState extends State<BlankScreen> {
 
   @override
   void dispose() {
+    _disposeFields();
+    super.dispose();
+  }
+
+  void _disposeFields() {
     for (final c in _controllers) {
       c.dispose();
     }
     for (final f in _focusNodes) {
       f.dispose();
     }
-    super.dispose();
   }
 
   int get _score {
@@ -74,6 +92,48 @@ class _BlankScreenState extends State<BlankScreen> {
       }
       _checked = false;
     });
+  }
+
+  Future<void> _generateNew() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final items = await widget.openAI.generatePhysicsClozeSentences(
+        context: kKineticBlankAi,
+      );
+      if (!mounted) return;
+      setState(() {
+        _disposeFields();
+        _items = mapGeneratedClozeSentences(
+          source: items,
+          build: (b) => ClozeSentence(
+            beat: b.beat,
+            before: b.before,
+            after: b.after,
+            answer: b.answer,
+            alsoAccept: b.alsoAccept,
+            hint: b.hint,
+          ),
+        );
+        _initFields();
+        _checked = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Loaded ${items.length} new AI sentences. Fill each blank, then '
+            'Check.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate sentences: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
   }
 
   /// Enter on the keyboard moves to the next blank, and marks on the last one.
@@ -145,11 +205,15 @@ class _BlankScreenState extends State<BlankScreen> {
             ],
           ),
         ),
-        ActionBar(
+        LessonActionBar(
+          accent: Palette.slate,
           primaryLabel: _checked ? 'Answers marked' : 'Check answers',
           onPrimary: _checked ? null : _check,
           secondaryLabel: _checked ? 'Try again' : 'Clear',
           onSecondary: _reset,
+          aiLabel: 'New Questions',
+          onAi: _generateNew,
+          generating: _generating,
         ),
       ],
     );

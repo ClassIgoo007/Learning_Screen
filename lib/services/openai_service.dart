@@ -7,6 +7,9 @@ import '../features/activity/logic/word_search_builder.dart';
 import '../features/activity/models/activity.dart';
 import '../features/crossword/logic/crossword_builder.dart';
 import '../features/crossword/models/crossword.dart';
+import '../features/physics/bernoulli/models/content.dart' as bernoulli;
+import '../features/physics/cloud_formation/models/lesson.dart';
+import '../features/physics/shared/physics_ai.dart';
 import '../features/science/models/science_content.dart';
 import '../models/worksheet.dart';
 
@@ -96,6 +99,58 @@ Rules:
 - Each blank is one word or a short phrase found in / supported by the passage.
 - "accepted" lists every spelling counted correct; first entry is canonical.
 - Do not put the answer inside before/after.
+''';
+
+  static const _physicsChoicePrompt = '''
+You write grade 5–8 physics reading-comprehension multiple-choice questions
+linked to an animated lesson.
+Respond with ONLY a JSON object, no markdown fences, in exactly this shape:
+
+{
+  "questions": [
+    {
+      "beat": 1,
+      "topic": "short label",
+      "question": "string",
+      "choices": ["choice A", "choice B", "choice C"],
+      "answer": "exact text of the correct choice"
+    }
+  ]
+}
+
+Rules:
+- Every question must be answerable from the passage alone.
+- Exactly 3 choices per question; "answer" must match one choice exactly.
+- "beat" is an integer from 1 to the max beat given — tie each question to
+  the animation stage it best tests.
+- "topic" is a 1–3 word label (e.g. "Cooling", "Pressure").
+- Vary which choice is correct.
+- Keep vocabulary age-appropriate.
+''';
+
+  static const _physicsBlanksPrompt = '''
+You write grade 5–8 physics fill-in-the-blank sentences from a reading passage,
+linked to an animated lesson.
+Respond with ONLY a JSON object, no markdown fences, in exactly this shape:
+
+{
+  "blankItems": [
+    {
+      "beat": 1,
+      "before": "text before the blank",
+      "after": "text after the blank",
+      "answer": "canonical answer",
+      "also_accept": ["optional synonym"],
+      "hint": "short helpful hint or empty string"
+    }
+  ]
+}
+
+Rules:
+- Each blank is one word or a short phrase found in / supported by the passage.
+- "beat" is an integer from 1 to the max beat given.
+- Do not put the answer inside before/after.
+- "also_accept" may be empty.
 ''';
 
   static const _crosswordCluesPrompt = '''
@@ -229,6 +284,108 @@ Rules:
       throw HttpException('AI returned too few valid blank sentences.');
     }
     return items;
+  }
+
+  /// New multiple-choice questions for a physics worksheet passage.
+  Future<List<ChoiceQuestion>> generatePhysicsChoiceQuestions({
+    required PhysicsAiContext context,
+  }) async {
+    final map = await _chatJson(
+      system: _physicsChoicePrompt,
+      user: _physicsUserPrompt(context, kind: 'multiple-choice questions'),
+      temperature: 0.85,
+    );
+    final list = map['questions'] as List? ?? const [];
+    final questions = list
+        .whereType<Map>()
+        .map((e) => ChoiceQuestion.fromJson(Map<String, dynamic>.from(e)))
+        .where((q) =>
+            q.prompt.isNotEmpty &&
+            q.choices.length >= 2 &&
+            q.choices.contains(q.answer))
+        .toList();
+    final minCount = (context.itemCount / 2).ceil();
+    if (questions.length < minCount) {
+      throw HttpException('AI returned too few valid physics questions.');
+    }
+    return questions;
+  }
+
+  /// New fill-in-the-blank sentences for a physics worksheet passage.
+  Future<List<ClozeSentence>> generatePhysicsClozeSentences({
+    required PhysicsAiContext context,
+  }) async {
+    final map = await _chatJson(
+      system: _physicsBlanksPrompt,
+      user: _physicsUserPrompt(context, kind: 'fill-in-the-blank sentences'),
+      temperature: 0.85,
+    );
+    final list = map['blankItems'] as List? ?? const [];
+    final items = list
+        .whereType<Map>()
+        .map((e) => ClozeSentence.fromJson(Map<String, dynamic>.from(e)))
+        .where((b) => b.before.isNotEmpty && b.answer.isNotEmpty)
+        .toList();
+    final minCount = (context.itemCount / 2).ceil();
+    if (items.length < minCount) {
+      throw HttpException('AI returned too few valid physics blank sentences.');
+    }
+    return items;
+  }
+
+  /// New Bernoulli principle quiz questions grounded in the lesson passage.
+  Future<List<bernoulli.QuizQuestion>> generateBernoulliQuiz() async {
+    final map = await _chatJson(
+      system: _scienceQuizPrompt,
+      user: 'Topic: ${bernoulli.kBernoulliPassage.title}\n'
+          'Passage:\n${bernoulli.kBernoulliPassage.text}\n\n'
+          'Generate 10 new multiple-choice questions different from typical '
+          'worksheet copies. Learners may also use the Venturi simulation.',
+      temperature: 0.85,
+    );
+    final list = map['questions'] as List? ?? const [];
+    final questions = list
+        .whereType<Map>()
+        .map((e) => _bernoulliQuestionFromJson(Map<String, dynamic>.from(e)))
+        .where((q) => q.question.isNotEmpty && q.options.length >= 2)
+        .toList();
+    if (questions.length < 5) {
+      throw HttpException('AI returned too few valid Bernoulli questions.');
+    }
+    return questions;
+  }
+
+  String _physicsUserPrompt(PhysicsAiContext context, {required String kind}) {
+    final bank = context.wordBank.isEmpty
+        ? ''
+        : 'Word bank: ${context.wordBank.join(', ')}\n';
+    return 'Topic: ${context.topicTitle}\n'
+        '$bank'
+        'Animation beats: 1 through ${context.maxBeat}\n'
+        'Passage:\n${context.passageBlock}\n\n'
+        'Generate exactly ${context.itemCount} new $kind different from '
+        'typical worksheet copies.';
+  }
+
+  static bernoulli.QuizQuestion _bernoulliQuestionFromJson(
+    Map<String, dynamic> json,
+  ) {
+    final options = (json['options'] as List?)?.map((e) => '$e').toList() ??
+        const <String>[];
+    var answerIndex = json['answerIndex'] as int? ?? 0;
+    final answer = json['answer'];
+    if (answer is String && options.isNotEmpty) {
+      final i = options.indexWhere(
+          (o) => o.toLowerCase().trim() == answer.toLowerCase().trim());
+      if (i >= 0) answerIndex = i;
+    }
+    if (answerIndex < 0 || answerIndex >= options.length) answerIndex = 0;
+    return bernoulli.QuizQuestion(
+      question: '${json['question'] ?? ''}',
+      options: options,
+      answerIndex: answerIndex,
+      explanation: '${json['explanation'] ?? ''}',
+    );
   }
 
   /// Brand-new vowel activity: new word bank, new sentences, rebuilt grid.

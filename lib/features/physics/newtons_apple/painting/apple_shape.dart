@@ -16,6 +16,7 @@ void drawApple(
   double scaleY = 1.0,
   double rotation = 0.0,
   bool leaf = true,
+  bool stem = true,
   Color body = Palette.appleRed,
 }) {
   canvas.save();
@@ -56,16 +57,18 @@ void drawApple(
   canvas.restore();
 
   // Stem.
-  canvas.drawPath(
-    Path()
-      ..moveTo(0, -r * 0.66)
-      ..quadraticBezierTo(r * 0.10, -r * 1.02, r * 0.20, -r * 1.24),
-    Paint()
-      ..color = Palette.stem
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = r * 0.14
-      ..strokeCap = StrokeCap.round,
-  );
+  if (stem) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, -r * 0.66)
+        ..quadraticBezierTo(r * 0.10, -r * 1.02, r * 0.20, -r * 1.24),
+      Paint()
+        ..color = Palette.stem
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.14
+        ..strokeCap = StrokeCap.round,
+    );
+  }
 
   if (leaf) {
     canvas.drawPath(

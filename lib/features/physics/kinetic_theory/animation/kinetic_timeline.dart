@@ -155,47 +155,67 @@ class VesselState {
   double get width => right - VesselMetrics.left;
   double get height => VesselMetrics.bottom - VesselMetrics.top;
 
+  /// Interior span at full volume — used for laying out motion so squeezing
+  /// the right wall in does not slow or rescale the molecules.
+  double _relaxedInnerWidth(double inset) =>
+      VesselMetrics.rightRelaxed - VesselMetrics.left - inset * 2;
+
+  double _innerHeight(double inset) =>
+      VesselMetrics.bottom - VesselMetrics.top - inset * 2;
+
+  /// Pixels per second at unit temperature (heat = 0).
+  static const _motionScale = 120.0;
+
   /// Molecular speed multiplier. Temperature is the velocity of the molecules,
-  /// so this is the only thing heat changes.
+  /// so [heat] is the only control that changes speed — not [compression].
   double get speed => 1 + heat * 0.85;
 
   /// Volume as a fraction of the relaxed vessel, and the pressure that
-  /// follows from it: p = A x T / V, the relation the figure is explaining.
+  /// follows from it: p ∝ T / V, the relation the figure is explaining.
   double get volumeFraction =>
       width / (VesselMetrics.rightRelaxed - VesselMetrics.left);
   double get temperatureFraction => speed * speed;
   double get pressure => temperatureFraction / volumeFraction;
 
   Offset positionOf(Molecule m, {double inset = 18}) {
+    final innerLeft = VesselMetrics.left + inset;
+    final innerRight = right - inset;
+    final innerTop = VesselMetrics.top + inset;
+    final innerBottom = VesselMetrics.bottom - inset;
+
+    final motion = _motionScale * speed * t;
+
+    // Positions integrate at constant canvas speed; only the folding walls
+    // move inward when the vessel is compressed, so collision rate rises
+    // naturally in a smaller box.
     final x = foldBetween(
-      VesselMetrics.left + inset + m.x0 * (width - inset * 2) + m.vx * speed * t * 120,
-      VesselMetrics.left + inset,
-      right - inset,
+      innerLeft + m.x0 * _relaxedInnerWidth(inset) + m.vx * motion,
+      innerLeft,
+      innerRight,
     );
     final y = foldBetween(
-      VesselMetrics.top + inset + m.y0 * (height - inset * 2) + m.vy * speed * t * 120,
-      VesselMetrics.top + inset,
-      VesselMetrics.bottom - inset,
+      innerTop + m.y0 * _innerHeight(inset) + m.vy * motion,
+      innerTop,
+      innerBottom,
     );
     return Offset(x, y);
   }
 
   /// Unit vector of travel, for the arrow on each molecule.
   Offset headingOf(Molecule m, {double inset = 18}) {
-    final sx = foldRising(
-      VesselMetrics.left + inset + m.x0 * (width - inset * 2) + m.vx * speed * t * 120,
-      VesselMetrics.left + inset,
-      right - inset,
-    )
-        ? 1.0
-        : -1.0;
-    final sy = foldRising(
-      VesselMetrics.top + inset + m.y0 * (height - inset * 2) + m.vy * speed * t * 120,
-      VesselMetrics.top + inset,
-      VesselMetrics.bottom - inset,
-    )
-        ? 1.0
-        : -1.0;
+    final innerLeft = VesselMetrics.left + inset;
+    final innerRight = right - inset;
+    final innerTop = VesselMetrics.top + inset;
+    final innerBottom = VesselMetrics.bottom - inset;
+
+    final motion = _motionScale * speed * t;
+
+    final rawX =
+        innerLeft + m.x0 * _relaxedInnerWidth(inset) + m.vx * motion;
+    final rawY = innerTop + m.y0 * _innerHeight(inset) + m.vy * motion;
+
+    final sx = foldRising(rawX, innerLeft, innerRight) ? 1.0 : -1.0;
+    final sy = foldRising(rawY, innerTop, innerBottom) ? 1.0 : -1.0;
     final v = Offset(m.vx * sx, m.vy * sy);
     final d = v.distance;
     return d == 0 ? const Offset(1, 0) : v / d;

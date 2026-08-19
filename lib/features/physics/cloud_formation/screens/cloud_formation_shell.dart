@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/common.dart';
+import '../../../../services/openai_service.dart';
 import '../animation/scene_timeline.dart';
 import '../theme/palette.dart';
 import 'animation_screen.dart';
@@ -30,7 +31,9 @@ class LessonNavigator extends InheritedWidget {
 /// strip, and top capsule tabs (not a bottom NavigationBar like the lab or
 /// thermal lessons).
 class CloudFormationShell extends StatefulWidget {
-  const CloudFormationShell({super.key});
+  const CloudFormationShell({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   State<CloudFormationShell> createState() => _CloudFormationShellState();
@@ -164,8 +167,8 @@ class _CloudFormationShellState extends State<CloudFormationShell> {
                       index: _index,
                       children: [
                         AnimationScreen(stage: _stage),
-                        const ChoiceScreen(),
-                        const BlankScreen(),
+                        ChoiceScreen(openAI: widget.openAI),
+                        BlankScreen(openAI: widget.openAI),
                       ],
                     ),
                   ),

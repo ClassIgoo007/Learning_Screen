@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../services/openai_service.dart';
+import '../../shared/lesson_action_bar.dart';
 import '../../shared/modern_kit.dart';
+import '../../shared/physics_ai.dart';
 import '../data/lesson_data.dart';
 import '../models/lesson.dart';
 import '../theme/palette.dart';
@@ -8,7 +11,9 @@ import '../widgets/common.dart';
 
 /// Screen 1 — read the passage, then answer four multiple-choice questions.
 class ChoiceScreen extends StatefulWidget {
-  const ChoiceScreen({super.key});
+  const ChoiceScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   State<ChoiceScreen> createState() => _ChoiceScreenState();
@@ -17,8 +22,14 @@ class ChoiceScreen extends StatefulWidget {
 class _ChoiceScreenState extends State<ChoiceScreen> {
   final Map<int, String> _selected = <int, String>{};
   bool _checked = false;
+  bool _generating = false;
+  late List<ChoiceQuestion> _questions;
 
-  List<ChoiceQuestion> get _questions => kCloudLesson.choiceQuestions;
+  @override
+  void initState() {
+    super.initState();
+    _questions = List<ChoiceQuestion>.from(kCloudLesson.choiceQuestions);
+  }
 
   int get _score => _questions
       .asMap()
@@ -44,6 +55,37 @@ class _ChoiceScreenState extends State<ChoiceScreen> {
         _selected.clear();
         _checked = false;
       });
+
+  Future<void> _generateNew() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final questions = await widget.openAI.generatePhysicsChoiceQuestions(
+        context: kCloudChoiceAi,
+      );
+      if (!mounted) return;
+      setState(() {
+        _questions = questions;
+        _selected.clear();
+        _checked = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Loaded ${questions.length} new AI questions. Answer each one, '
+            'then Check.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate questions: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,11 +134,15 @@ class _ChoiceScreenState extends State<ChoiceScreen> {
             ],
           ),
         ),
-        ActionBar(
+        LessonActionBar(
+          accent: Palette.slate,
           primaryLabel: _checked ? 'Answers marked' : 'Check answers',
           onPrimary: _checked ? null : _check,
           secondaryLabel: _checked ? 'Try again' : 'Clear',
           onSecondary: _selected.isEmpty ? null : _reset,
+          aiLabel: 'New Questions',
+          onAi: _generateNew,
+          generating: _generating,
         ),
       ],
     );

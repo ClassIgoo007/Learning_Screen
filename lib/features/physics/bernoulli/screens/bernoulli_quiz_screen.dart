@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
+import '../../../../services/openai_service.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/common.dart';
 import '../logic/quiz_controller.dart';
@@ -12,15 +13,19 @@ import '../widgets/bernoulli_widgets.dart';
 
 /// Questions on Bernoulli's principle with Learning Hub chrome.
 class BernoulliQuizScreen extends StatefulWidget {
-  const BernoulliQuizScreen({super.key});
+  const BernoulliQuizScreen({super.key, required this.openAI});
+
+  final OpenAIService openAI;
 
   @override
   State<BernoulliQuizScreen> createState() => _BernoulliQuizScreenState();
 }
 
 class _BernoulliQuizScreenState extends State<BernoulliQuizScreen> {
-  final QuizController _controller = QuizController(kQuizQuestions);
+  late final QuizController _controller =
+      QuizController(List<QuizQuestion>.from(kQuizQuestions));
   bool _passageOpen = true;
+  bool _generating = false;
 
   @override
   void dispose() {
@@ -39,6 +44,31 @@ class _BernoulliQuizScreenState extends State<BernoulliQuizScreen> {
           : 'Not quite. The answer is ${q.answer}. ${q.explanation}',
       Directionality.of(context),
     ));
+  }
+
+  Future<void> _generateNew() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final questions = await widget.openAI.generateBernoulliQuiz();
+      if (!mounted) return;
+      _controller.replaceQuestions(questions);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Loaded ${questions.length} new AI questions. Tap an answer for '
+            'each one.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate questions: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
   }
 
   @override
@@ -104,9 +134,34 @@ class _BernoulliQuizScreenState extends State<BernoulliQuizScreen> {
                   ),
                 ),
               ),
+              _actionBar(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _actionBar() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x12203A5C),
+              blurRadius: 20,
+              offset: Offset(0, -6)),
+        ],
+      ),
+      child: AppButton(
+        label: _generating ? 'Generating…' : 'New Questions',
+        icon: Icons.auto_awesome_rounded,
+        color: BernoulliColors.accent,
+        enabled: !_generating,
+        onTap: _generateNew,
       ),
     );
   }
