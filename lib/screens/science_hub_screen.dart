@@ -116,7 +116,7 @@ class PhysicsHubScreen extends StatelessWidget {
           subtitle: 'Watch pressure drop in a Venturi tube, then quiz yourself',
           icon: Icons.water_drop_rounded,
           color: const Color(0xFF5C6BC0),
-          image: 'assets/sec_physics.png',
+          image: 'assets/bernoulli_preview.png',
           builder: (_) => BernoulliHomeScreen(openAI: openAI),
         ),
         HubCardItem(
